@@ -1,0 +1,23 @@
+{
+  "appId": "com.local.desktop-pet-reminder",
+  "productName": "休息时刻",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "package.json"
+  ],
+  "mac": {
+    "category": "public.app-category.productivity",
+    "target": [
+      "dmg"
+    ],
+    "hardenedRuntime": false,
+    "gatekeeperAssess": false
+  },
+  "dmg": {
+    "artifactName": "休息时刻-${version}-${arch}.${ext}"
+  }
+}
