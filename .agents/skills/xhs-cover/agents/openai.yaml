@@ -1,0 +1,7 @@
+interface:
+  display_name: "小红书封面 skill"
+  short_description: "按视频主题生成 3:4 小红书封面图，自动套用爆款视觉与文案规律"
+  default_prompt: "Use $xhs-cover to generate a 3:4 Xiaohongshu cover from one video topic, using supplied portrait references for consistent identity when provided."
+
+policy:
+  allow_implicit_invocation: true
