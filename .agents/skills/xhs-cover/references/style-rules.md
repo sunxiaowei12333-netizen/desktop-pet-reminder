@@ -20,15 +20,20 @@
 
 Keep the layout layered, not flat. Make the subject feel embedded in a live scene rather than pasted onto a blank background.
 
+## Canonical subject scale
+
+Use `/Users/sunjianwei/Desktop/call_99ceJMbZn4VDsb6vcYVm7G9n.png` as the owner's approved single-cover scale reference when it is available. The subject should be a larger, readable half-body or mid-torso figure on the right, roughly occupying the right third to two-fifths of the 3:4 canvas. Keep the upper torso and expressive hands when the gesture matters, but do not show a full body or unnecessary skin. Leave a visible breathing margin between the subject and the right edge; enlarge the subject without clipping or pinning her to the border. Preserve the single-cover reference's balance: title first, comparison evidence second, subject third, with all three readable on a phone.
+
 ## Identity handling
 
-When the user supplies portrait references:
+Read `owner-identity.md` whenever a woman or host appears. The portrait files listed there are mandatory model inputs, including for a from-scratch poster.
 
-- Use the same person as the cover subject.
+- Use the workspace owner as the cover subject, not a similar-looking generic model.
 - Preserve face shape, eye spacing, nose/mouth proportions, hair length, bangs, and accessory cues.
 - Change only emotion, pose, clothing styling, and surrounding props as the topic needs.
 - Prefer one canonical reference when several images conflict slightly.
 - Keep the result recognizably the same person across repeated generations.
+- Never claim identity preservation when the model received only a textual face description.
 
 ## Copy formula
 
@@ -40,6 +45,7 @@ Use one of these patterns:
 - `反差/疑问 + 解决方案`
 
 Good cover text is short, specific, and outcome-driven.
+For four-panel preview mode, keep each candidate close to the preferred single-cover style: one dominant top headline, minimal supporting copy, and clean negative space.
 
 Preferred tone:
 
@@ -52,10 +58,13 @@ Preferred tone:
 ## Typography rules
 
 - Use oversized bold Chinese characters.
-- Add a dark stroke or heavy shadow.
+- For this workspace, do not use black outlines, black strokes, thick black extrusion, or heavy black shadows on the main headline.
+- Restore impact through scale and structure: let the main headline occupy roughly the top 18-24% of the canvas and 86-96% of the usable width; use an extra-bold condensed display face, tight tracking, compact line spacing, and strong white/yellow color blocking.
+- Separate the headline from the background with a clean dark negative-space zone, subtle cyan/orange glow, bright edge light, or a restrained colored shadow. Keep letter edges clean.
+- Allow slight optical overlap, perspective, or a small upward angle when it increases energy, but keep every character fully legible.
 - Keep the first line strongest.
 - Use a second line only when it helps clarity or adds a payoff.
-- A small badge can add structure, but do not let it compete with the main hook.
+- A small badge can add structure, but keep it simple: one solid rounded rectangle or plain speech bubble with one small tail, no brush texture, jagged burst, double border, splatter, or ornate sticker decoration.
 
 ## Color and lighting
 
@@ -84,7 +93,7 @@ Example scaffold:
 
 ## Do not copy
 
-- Real people
+- Unauthorized real people or celebrities; the workspace owner's supplied portraits are the authorized identity source
 - Brand logos
 - App UI trademarks
 - Character IP
