@@ -22,7 +22,7 @@ Keep the layout layered, not flat. Make the subject feel embedded in a live scen
 
 ## Canonical subject scale
 
-Use `/Users/sunjianwei/Desktop/call_99ceJMbZn4VDsb6vcYVm7G9n.png` as the owner's approved single-cover scale reference when it is available. The subject should be a larger, readable half-body or mid-torso figure on the right, roughly occupying the right third to two-fifths of the 3:4 canvas. Keep the upper torso and expressive hands when the gesture matters, but do not show a full body or unnecessary skin. Leave a visible breathing margin between the subject and the right edge; enlarge the subject without clipping or pinning her to the border. Preserve the single-cover reference's balance: title first, comparison evidence second, subject third, with all three readable on a phone.
+Use `/Users/sunjianwei/Desktop/call_99ceJMbZn4VDsb6vcYVm7G9n.png` as the owner's approved single-cover balance reference when it is available. The subject must be a half-body or mid-torso figure cropped at the waist, never extending to hips, thighs, or legs. The waist must be fully covered with no visible midriff or side-waist skin. Keep breathing room around the subject. Subject size is flexible rather than a fixed percentage; preserve the reference's balance of title first, evidence second, subject third.
 
 ## Identity handling
 
@@ -34,6 +34,7 @@ Read `owner-identity.md` whenever a woman or host appears. The portrait files li
 - Prefer one canonical reference when several images conflict slightly.
 - Keep the result recognizably the same person across repeated generations.
 - Never claim identity preservation when the model received only a textual face description.
+- Face finish: clean and refined portrait texture with subtle natural pores; remove visible grain, speckles, compression noise, and synthetic roughness while preserving natural skin detail.
 
 ## Copy formula
 
@@ -45,7 +46,27 @@ Use one of these patterns:
 - `反差/疑问 + 解决方案`
 
 Good cover text is short, specific, and outcome-driven.
-For four-panel preview mode, keep each candidate close to the preferred single-cover style: one dominant top headline, minimal supporting copy, and clean negative space.
+For four-panel preview mode, keep the title hierarchy and readability close to the preferred single-cover style, but deliberately split the four directions. Vary headline structure, emotional read, face angle, camera/composition, subject placement, and background atmosphere. The shared topic does not require a shared visual template. Keep the wardrobe fixed to the blue denim short-sleeve collared dress/set and keep headline text fixed to white and yellow. Keep previews as readable directional drafts with minimal supporting copy; reserve dense evidence layers and final polish for the selected single cover.
+
+## Locked and variable controls
+
+Locked in every generation:
+
+- owner's identity
+- blue fitted denim short-sleeve collared dress/set
+- fully covered waist with no exposed skin
+- half-body crop ending at the waist
+- exact 3:4 canvas
+- white and bright yellow headline text
+
+Allowed to vary:
+
+- headline wording
+- facial expression
+- face angle
+- gesture and subject placement
+- composition
+- background setting, atmosphere, and palette
 
 Preferred tone:
 
