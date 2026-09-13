@@ -2,6 +2,8 @@
 
 `休息时刻` 默认不绑定任何付费生图 API。桌面端会先自动尝试拉起本地生成服务，再通过 Electron 主进程调用它，避免把用户照片和密钥暴露给前端。
 
+当前内置适配器使用 OpenAI GPT Image 2 的 `/v1/images/edits` 接口。在设置页填入 OpenAI API Key 即可调用；Key 只在本次运行中传给桌面端主进程，不写入 GitHub，也不会持久化到浏览器 localStorage。
+
 ## 推荐架构
 
 ```text
@@ -9,7 +11,9 @@ Electron App
   ↓ photos + prompt plan
 Local Generation Endpoint
   ↓
-ComfyUI / FLUX / SDXL workflow
+GPT Image 2 image-edit identity workflow
+  ↓
+GPT Image 2 image-edit action workflow
   ↓
 Rembg / RMBG transparent PNG post-process
   ↓
@@ -18,7 +22,7 @@ Rembg / RMBG transparent PNG post-process
 
 ## 方式一：自定义本地 HTTP 服务
 
-启动 App 时传入：
+启动 App 时传入（也可以直接在设置页填写 API Key）：
 
 ```bash
 PET_GENERATION_ENDPOINT_URL=http://127.0.0.1:8787/generate npm run desktop:dev
@@ -42,8 +46,8 @@ App 会发送：
     "data:image/png;base64,..."
   ],
   "plan": {
-    "provider": "local-comfyui",
-    "modelFamily": "FLUX / SDXL reference-image workflow",
+    "provider": "gpt-image-2",
+    "modelFamily": "OpenAI GPT Image 2 image editing",
     "referenceCount": 10,
     "outputContract": {
       "views": 5,
@@ -52,15 +56,25 @@ App 会发送：
     },
     "stages": [
       {
-        "id": "identity-five-view",
-        "output": "five transparent-background views of the same real pet cat",
-        "prompt": "Use all uploaded reference photos to infer one consistent real cat identity..."
+        "id": "gpt-image-2-identity-views",
+        "type": "image-edit",
+        "input": "all-reference-photos",
+        "output": "five new transparent-background views of the same real cat",
+        "prompt": "Use all uploaded photos as identity references for the same real cat. Generate five new transparent-background views..."
       },
       {
-        "id": "action-set",
+        "id": "gpt-image-2-action-set",
+        "type": "image-edit",
+        "input": "generated-five-view-renders",
         "output": "six transparent-background desktop pet action sprites",
-        "prompt": "Based on the generated five-view identity sheet..."
+        "prompt": "Use the generated five-view identity images as references and create six distinct transparent-background realistic desktop pet actions..."
       }
+    ],
+    "constraints": [
+      "must-return-five-new-views",
+      "must-return-six-new-actions",
+      "no-source-photo-as-final-output",
+      "transparent-png-output"
     ]
   }
 }
@@ -68,7 +82,7 @@ App 会发送：
 
 ### 响应格式
 
-服务必须返回 5 个视图和 6 个动作：
+服务必须返回 5 个全新视图和 6 个全新动作。缺少任一组结果时，App 会拒绝结果，不会把原图抠图当作动作素材：
 
 ```json
 {
@@ -146,16 +160,15 @@ App 会发送：
 http://127.0.0.1:8188
 ```
 
-当前 App 会自动检查并尝试启动 ComfyUI；真正执行工作流需要补一个适配层，把 ComfyUI 工作流的输出整理成上面的响应格式。
+当前 App 会优先调用 GPT Image 2 适配器；如果未填 API Key，才回退到检查 ComfyUI / 自定义端点。GPT Image 2 不支持 `background: transparent`，所以适配器要求模型返回纯绿幕图，再由本地后处理转成透明 PNG。
 
 建议工作流：
 
-1. 参考图输入：1-10 张猫咪照片。
-2. 身份一致性：FLUX / SDXL + IP-Adapter / Redux / LoRA。
-3. 阶段一：生成同一只猫的五视图。
-4. 阶段二：基于五视图生成六个动作。
-5. 后处理：rembg / RMBG 输出透明 PNG。
-6. 返回：5 个 view + 6 个 variants。
+1. 参考图输入：1-10 张猫咪照片，全部送入同一个任务。
+2. GPT Image 2：将 1-10 张照片作为身份参考，生成 5 张全新的绿幕五视图，再由本地后处理转透明。
+3. GPT Image 2：将这 5 张新视图作为第二阶段参考，生成 6 个不同动作；不能回到原图做抠图、镜像或仿射变形。
+4. 后处理：rembg / RMBG 输出透明 PNG。
+5. 返回：5 个 views + 6 个 variants。
 
 ## 透明背景说明
 

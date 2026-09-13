@@ -2,6 +2,7 @@ const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen } = require
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const { pathToFileURL } = require("url");
 
 const isDev = !app.isPackaged;
 const devServerUrl = process.env.VITE_DEV_SERVER_URL || "http://127.0.0.1:4173";
@@ -9,6 +10,7 @@ const devServerUrl = process.env.VITE_DEV_SERVER_URL || "http://127.0.0.1:4173";
 let tray = null;
 let settingsWindow = null;
 let petWindow = null;
+let petWindowPositioned = false;
 let lastReminder = null;
 let snoozeTimer = null;
 let reminderTimer = null;
@@ -19,14 +21,36 @@ let generationBootstrapState = {
 let generationBootstrapPromise = null;
 let generationProcess = null;
 
+function quitApp() {
+  // Mark this before destroying windows: the settings window's close handler
+  // otherwise turns a normal quit into another hide-to-tray operation.
+  app.isQuitting = true;
+  clearTimeout(snoozeTimer);
+  clearTimeout(reminderTimer);
+  if (generationProcess && !generationProcess.killed) generationProcess.kill("SIGTERM");
+  generationProcess = null;
+  if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.destroy();
+  if (petWindow && !petWindow.isDestroyed()) petWindow.destroy();
+  if (tray) {
+    tray.destroy();
+    tray = null;
+  }
+  // app.quit() runs Electron's normal shutdown path and is more reliable
+  // than only calling app.exit() when a tray menu owns the last UI surface.
+  app.quit();
+}
+
 const defaultSettings = {
   restEnabled: true,
   start: "09:00",
   end: "18:00",
   reminderInterval: "45",
+  reminderIntervalMinutes: 45,
   restWork: "50",
   restDuration: "10",
   reminderBody: "离开屏幕 10 分钟，让眼睛和肩颈松一松。",
+  generationEndpointUrl: "",
+  generationEndpointToken: "",
 };
 
 function settingsFilePath() {
@@ -40,7 +64,11 @@ function assetsFilePath() {
 function readSettings() {
   try {
     const raw = fs.readFileSync(settingsFilePath(), "utf8");
-    return { ...defaultSettings, ...JSON.parse(raw) };
+    const parsed = { ...defaultSettings, ...JSON.parse(raw) };
+    if (parsed.generationEndpointUrl === "http://127.0.0.1:8787/generate") {
+      parsed.generationEndpointUrl = "";
+    }
+    return parsed;
   } catch {
     return defaultSettings;
   }
@@ -60,6 +88,8 @@ function readPetAssets() {
     const parsed = JSON.parse(raw);
     return {
       photos: Array.isArray(parsed.photos) ? parsed.photos.slice(0, 10) : [],
+      pipelineVersion: Number(parsed.pipelineVersion || 0),
+      imageModel: parsed.imageModel || null,
       profile: parsed.profile || null,
       variants: Array.isArray(parsed.variants) ? parsed.variants : [],
       primarySticker: parsed.primarySticker || null,
@@ -68,6 +98,8 @@ function readPetAssets() {
   } catch {
     return {
       photos: [],
+      pipelineVersion: 0,
+      imageModel: null,
       profile: null,
       variants: [],
       primarySticker: null,
@@ -79,6 +111,8 @@ function readPetAssets() {
 function writePetAssets(assets) {
   const safeAssets = {
     photos: Array.isArray(assets?.photos) ? assets.photos.slice(0, 10) : [],
+    pipelineVersion: Number(assets?.pipelineVersion || 0),
+    imageModel: assets?.imageModel || null,
     profile: assets?.profile || null,
     variants: Array.isArray(assets?.variants) ? assets.variants : [],
     primarySticker: assets?.primarySticker || null,
@@ -92,8 +126,8 @@ function writePetAssets(assets) {
 
 function buildPetGenerationPlan(referenceCount) {
   return {
-    provider: process.env.PET_GENERATION_PROVIDER || "local-comfyui",
-    modelFamily: process.env.PET_GENERATION_MODEL_FAMILY || "FLUX / SDXL reference-image workflow",
+    provider: process.env.PET_GENERATION_PROVIDER || "gpt-image-2",
+    modelFamily: process.env.PET_GENERATION_MODEL_FAMILY || "图像生成服务",
     referenceCount,
     outputContract: {
       views: 5,
@@ -102,30 +136,50 @@ function buildPetGenerationPlan(referenceCount) {
     },
     stages: [
       {
-        id: "identity-five-view",
-        output: "five transparent-background views of the same real pet cat",
+        id: "gpt-image-2-identity-views",
+        type: "image-edit",
+        input: "all-reference-photos",
+        output: "five new transparent-background views of the same real cat",
         prompt:
-          "Use all uploaded reference photos to infer one consistent real cat identity. Generate five transparent-background views: front, left side, right side, calm resting pose, dynamic/stretch pose. Preserve fur color, facial markings, eye color, body proportion, tail shape, and distinctive details. Do not merely cut out or warp the uploaded photos.",
+          "Use all uploaded photos as identity references for the same real cat. Generate five new transparent-background images: front, left side, right side, calm resting pose, and dynamic pose. Preserve the cat's exact fur colors, markings, face shape, eyes, ears, body proportions, and tail. Gently clean visible eye discharge/crust from both eye corners while preserving natural eyes, eyelids and fur detail; no beauty-filter smoothing. This is image-to-image generation: never return an uploaded photo, crop it, mirror it, rotate it, or warp it.",
       },
       {
-        id: "action-set",
+        id: "gpt-image-2-action-set",
+        type: "image-edit",
+        input: "generated-five-view-renders",
         output: "six transparent-background desktop pet action sprites",
         prompt:
-          "Based on the generated five-view identity sheet, generate six transparent-background realistic cat actions for a desktop reminder pet: waving attention, lying down, side glance, stretching, calm companion, blinking prompt. Keep the same cat identity across all actions.",
+          "Use the generated five-view identity images as references and create six new, visibly different transparent-background realistic cat actions: waving attention, lying down, side glance, stretching, calm companion, and blinking prompt. Keep the same cat identity, markings, proportions, and fur across every action. Gently clean visible eye discharge/crust from both eye corners while preserving natural eyes, eyelids and fur detail; no beauty-filter smoothing. Do not return or directly edit any uploaded source photo. Do not add a cup or other prop.",
       },
+    ],
+    constraints: [
+      "must-return-five-new-views",
+      "must-return-six-new-actions",
+      "no-source-photo-as-final-output",
+      "transparent-png-output",
     ],
   };
 }
 
-function getGenerationConfig() {
+function getGenerationConfig(settings = readSettings()) {
   return {
-    customEndpoint: process.env.PET_GENERATION_ENDPOINT_URL || "",
-    customToken: process.env.PET_GENERATION_ENDPOINT_TOKEN || "",
+    customEndpoint: settings.generationEndpointUrl || process.env.PET_GENERATION_ENDPOINT_URL || "",
+    customToken: settings.generationEndpointToken || process.env.PET_GENERATION_ENDPOINT_TOKEN || "",
     comfyBaseUrl: (process.env.COMFYUI_BASE_URL || "http://127.0.0.1:8188").replace(/\/$/, ""),
     workflowPath: process.env.COMFYUI_WORKFLOW_PATH || "",
     comfyExecutable: process.env.COMFYUI_EXECUTABLE || "",
     comfyHome: process.env.COMFYUI_HOME || "",
   };
+}
+
+async function generateWithBundledImage2(photos, apiKey) {
+  const providerPath = path.join(app.getAppPath(), "scripts", "image2-provider.mjs");
+  const { generatePetAssetsWithImage2 } = await import(pathToFileURL(providerPath).href);
+  return generatePetAssetsWithImage2({
+    photos,
+    apiKey: apiKey || process.env.OPENAI_API_KEY || "",
+    model: process.env.OPENAI_IMAGE_MODEL || "gpt-image-2",
+  });
 }
 
 async function readGenerationHealth(baseUrl) {
@@ -250,6 +304,8 @@ function normalizeGeneratedAssets(result, photos) {
   const variants = Array.isArray(result?.variants) ? result.variants.slice(0, 6) : [];
   return {
     ok: true,
+    pipelineVersion: 2,
+    imageModel: result?.imageModel || result?.provider || "image2",
     provider: result?.provider || process.env.PET_GENERATION_PROVIDER || "local-comfyui",
     profile: {
       references: photos.length,
@@ -293,7 +349,37 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 2500) {
 async function generatePetAssetsWithLocalEngine(payload) {
   const photos = Array.isArray(payload?.photos) ? payload.photos.slice(0, 10) : [];
   const plan = buildPetGenerationPlan(photos.length);
-  const config = getGenerationConfig();
+  const config = {
+    ...getGenerationConfig(),
+    customEndpoint: payload?.generationSettings?.customEndpoint || getGenerationConfig().customEndpoint,
+    customToken: payload?.generationSettings?.customToken || getGenerationConfig().customToken,
+  };
+
+  // For this personal build, a token means the user explicitly enabled the
+  // bundled ImageGen path. Do not route uploads through the old local engine.
+  if (!config.customEndpoint && config.customToken) {
+    try {
+      const result = await generateWithBundledImage2(photos, config.customToken);
+      return normalizeGeneratedAssets(result, photos);
+    } catch (error) {
+      return {
+        ok: false,
+        code: "IMAGE2_SERVICE_ERROR",
+        message: `图像生成服务调用失败：${error.message}`,
+        plan,
+      };
+    }
+  }
+
+  if (!config.customEndpoint) {
+    return {
+      ok: false,
+      code: "IMAGE2_API_KEY_REQUIRED",
+      message: "请在提醒形象里填写 OpenAI API Key，再生成参考视图和 6 个动作。",
+      plan,
+    };
+  }
+
   await autoBootstrapGenerationService();
 
   if (config.customEndpoint) {
@@ -375,7 +461,8 @@ function scheduleReminder(settings = readSettings()) {
   clearTimeout(reminderTimer);
   if (!settings.restEnabled) return;
 
-  const intervalMs = Math.max(1, Number(settings.reminderInterval || 45)) * 60 * 1000;
+  const intervalMinutes = Number(settings.reminderIntervalMinutes ?? settings.reminderInterval ?? 45);
+  const intervalMs = Math.max(1, intervalMinutes) * 60 * 1000;
   const delay = isInsideReminderWindow(settings) ? intervalMs : msUntilNextStart(settings);
 
   reminderTimer = setTimeout(() => {
@@ -410,7 +497,9 @@ function createSettingsWindow() {
     minHeight: 560,
     show: false,
     title: "休息时刻",
-    titleBarStyle: "hiddenInset",
+    // Keep the native traffic lights in their own title bar; hiddenInset put
+    // them on top of the app's coffee icon.
+    titleBarStyle: "default",
     vibrancy: "under-window",
     visualEffectState: "active",
     backgroundColor: "#00000000",
@@ -444,7 +533,7 @@ function createPetWindow() {
     frame: false,
     transparent: true,
     resizable: false,
-    movable: false,
+    movable: true,
     minimizable: false,
     maximizable: false,
     fullscreenable: false,
@@ -462,10 +551,18 @@ function createPetWindow() {
 
   petWindow.setAlwaysOnTop(true, "screen-saver");
   petWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  // The reminder is a mouse-interactive floating surface, but it must never
+  // become the keyboard owner or interfere with system screenshot shortcuts.
+  petWindow.setFocusable(false);
   petWindow.setIgnoreMouseEvents(false);
 
   petWindow.on("closed", () => {
     petWindow = null;
+    petWindowPositioned = false;
+  });
+
+  petWindow.on("moved", () => {
+    petWindowPositioned = true;
   });
 
   loadRenderer(petWindow, "pet");
@@ -474,6 +571,7 @@ function createPetWindow() {
 
 function positionPetWindow() {
   if (!petWindow || petWindow.isDestroyed()) return;
+  if (petWindowPositioned) return;
   const display = screen.getPrimaryDisplay();
   const area = display.workArea;
   const bounds = petWindow.getBounds();
@@ -507,7 +605,7 @@ function createTray() {
     "data:image/svg+xml;utf8," +
       encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
-          <path fill="black" d="M5.5 6.5c.2-2.1 1.2-3.8 2.7-4.7.5-.3 1.1.1 1.2.7l.4 2.2c.8-.2 1.6-.2 2.4 0l.4-2.2c.1-.6.8-1 1.3-.7 1.5.9 2.4 2.6 2.6 4.7 1 1 1.6 2.4 1.6 4 0 4.1-3.2 7.3-7.1 7.3s-7.1-3.2-7.1-7.3c0-1.6.6-3 1.6-4Zm5.5 9.1c2.7 0 4.9-2.2 4.9-5.1 0-2.7-2.1-4.4-4.9-4.4S6.1 7.8 6.1 10.5c0 2.9 2.2 5.1 4.9 5.1Z"/>
+          <path fill="none" stroke="black" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M6 4.5h9v7.2A4.3 4.3 0 0 1 10.7 16H10a4 4 0 0 1-4-4V4.5Zm9 2h1.2a2.4 2.4 0 0 1 0 4.8H15M8 19h7M7.5 2.5h6"/>
         </svg>
       `),
   );
@@ -522,10 +620,7 @@ function createTray() {
       { type: "separator" },
       {
         label: "退出",
-        click: () => {
-          app.isQuitting = true;
-          app.quit();
-        },
+        click: quitApp,
       },
     ]),
   );
@@ -538,9 +633,24 @@ app.whenReady().then(() => {
   }
   createTray();
   createPetWindow();
+  // Make a direct launch visibly open the main settings window instead of
+  // starting only as a hidden menu-bar process.
+  createSettingsWindow();
   scheduleReminder(readSettings());
   autoBootstrapGenerationService();
   screen.on("display-metrics-changed", positionPetWindow);
+});
+
+app.on("before-quit", () => {
+  app.isQuitting = true;
+  clearTimeout(snoozeTimer);
+  clearTimeout(reminderTimer);
+  if (generationProcess && !generationProcess.killed) generationProcess.kill("SIGTERM");
+  generationProcess = null;
+  if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.destroy();
+  if (petWindow && !petWindow.isDestroyed()) petWindow.destroy();
+  if (tray) tray.destroy();
+  tray = null;
 });
 
 app.on("window-all-closed", () => {});

@@ -5,14 +5,35 @@ import {
   Check,
   Clock3,
   Coffee,
-  ImagePlus,
   Pause,
   Play,
-  Settings2,
   Sparkles,
   X,
 } from "lucide-react";
 import catCompanion from "./assets/cat-companion.png";
+import nailaoFront from "./assets/nailao/nailao-reference-front-1789211030013-1.png";
+import nailaoLeft from "./assets/nailao/nailao-reference-left-1789211270138-1.png";
+import nailaoRight from "./assets/nailao/nailao-reference-right-1789211269256-1.png";
+import nailaoCalm from "./assets/nailao/nailao-reference-calm-1789211298104-1.png";
+import nailaoStretch from "./assets/nailao/nailao-reference-stretch-1789211286938-1.png";
+import nailaoWave from "./assets/nailao/nailao-action-wave-1789211458319-1.png";
+import nailaoRest from "./assets/nailao/nailao-action-rest-1789211467873-1.png";
+import nailaoLook from "./assets/nailao/nailao-action-look-1789211520308-1.png";
+import nailaoActionStretch from "./assets/nailao/nailao-action-stretch-1789211510158-1.png";
+import nailaoCompanion from "./assets/nailao/nailao-action-companion-1789211624763-1.png";
+import nailaoBlink from "./assets/nailao/nailao-action-blink-1789211461046-1.png";
+import nailaoWaveGif from "./assets/nailao/nailao-action-wave.gif";
+import nailaoRestGif from "./assets/nailao/nailao-action-rest.gif";
+import nailaoLookGif from "./assets/nailao/nailao-action-look.gif";
+import nailaoStretchGif from "./assets/nailao/nailao-action-stretch.gif";
+import nailaoCompanionGif from "./assets/nailao/nailao-action-companion.gif";
+import nailaoBlinkGif from "./assets/nailao/nailao-action-blink.gif";
+import nailaoWaveImage2Gif from "./assets/nailao/nailao-action-wave-image2.gif";
+import nailaoRestImage2Gif from "./assets/nailao/nailao-action-rest-image2.gif";
+import nailaoLookImage2Gif from "./assets/nailao/nailao-action-look-image2.gif";
+import nailaoStretchImage2Gif from "./assets/nailao/nailao-action-stretch-image2.gif";
+import nailaoCompanionImage2Gif from "./assets/nailao/nailao-action-companion-image2.gif";
+import nailaoBlinkImage2Gif from "./assets/nailao/nailao-action-blink-image2.gif";
 import "./styles.css";
 
 const initialSettings = {
@@ -20,11 +41,15 @@ const initialSettings = {
   start: "09:00",
   end: "18:00",
   reminderInterval: "45",
+  reminderIntervalMinutes: 45,
   restWork: "50",
   restDuration: "10",
   reminderBody: "离开屏幕 10 分钟，让眼睛和肩颈松一松。",
+  generationEndpointUrl: "",
+  generationEndpointToken: "",
 };
 
+const petSettingsStorageKey = "rest-moment.settings.v1";
 const companionActions = [
   {
     label: "挥手提醒",
@@ -97,9 +122,9 @@ const companionActions = [
 const petCutoutSize = 1024;
 
 const buttonBase =
-  "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border border-white/65 bg-white/45 px-3.5 text-[11px] font-medium text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.08)] backdrop-blur-2xl transition hover:-translate-y-px hover:bg-white/70 hover:text-slate-950";
+  "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-xl border border-white/65 bg-white/45 px-3.5 text-[11px] font-medium text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.08)] backdrop-blur-2xl transition hover:-translate-y-px hover:bg-white/70 hover:text-slate-950";
 const primaryButton =
-  "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-full border border-slate-950/5 bg-slate-950 px-3.5 text-[11px] font-medium text-white shadow-[0_12px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-px hover:bg-slate-800";
+  "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-xl bg-slate-700 px-3 text-[10px] font-medium text-white shadow-[0_8px_18px_rgba(71,85,105,0.14)] transition hover:-translate-y-px hover:bg-slate-800";
 
 const fieldBase =
   "h-9 w-full rounded-2xl border border-white/75 bg-white/68 px-3 text-[11px] text-slate-800 shadow-[0_8px_20px_rgba(148,163,184,0.06)] outline-none transition placeholder:text-slate-300 focus:border-sky-300/70 focus:ring-4 focus:ring-sky-100/60";
@@ -138,6 +163,40 @@ const identityViewSpecs = [
 ];
 
 const petAssetsStorageKey = "rest-moment.pet-assets.v1";
+const petGenerationPipelineVersion = 3;
+const fixedNailaoViews = identityViewSpecs.map((item, index) => ({
+  ...item,
+  src: [nailaoFront, nailaoLeft, nailaoRight, nailaoCalm, nailaoStretch][index],
+  note: "固定猫咪参考视图",
+}));
+const fixedNailaoVariants = companionActions.map((item, index) => ({
+  ...item,
+  src: [nailaoWave, nailaoRest, nailaoLook, nailaoActionStretch, nailaoCompanion, nailaoBlink][index],
+  gif: [nailaoWaveImage2Gif, nailaoRestImage2Gif, nailaoLookImage2Gif, nailaoStretchImage2Gif, nailaoCompanionImage2Gif, nailaoBlinkImage2Gif][index],
+}));
+const fixedNailaoPhoto = {
+  id: "fixed-nailao-reference",
+  name: "奶酪（固定参考猫咪）",
+  src: nailaoFront,
+};
+
+// Keep reference photos small enough for Electron IPC, local persistence, and
+// the image request. The original file remains untouched on disk.
+async function prepareReferenceImage(file) {
+  if (!file?.type?.startsWith("image/")) throw new Error(`${file?.name || "文件"} 不是图片`);
+  const bitmap = await createImageBitmap(file);
+  const maxEdge = 1600;
+  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const context = canvas.getContext("2d", { alpha: false });
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
+  if (!dataUrl.startsWith("data:image/jpeg;base64,")) throw new Error("图片转换失败");
+  return dataUrl;
+}
 
 function readLocalPetAssets() {
   try {
@@ -145,6 +204,29 @@ function readLocalPetAssets() {
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
+  }
+}
+
+function readLocalSettings() {
+  try {
+    const raw = window.localStorage.getItem(petSettingsStorageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // 这是之前遗留的占位地址，不应在本地测试时被自动调用。
+    if (parsed.generationEndpointUrl === "http://127.0.0.1:8787/generate") {
+      parsed.generationEndpointUrl = "";
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalSettings(settings) {
+  try {
+    window.localStorage.setItem(petSettingsStorageKey, JSON.stringify(settings));
+  } catch {
+    // Web preview may reject large writes or private browsing storage.
   }
 }
 
@@ -157,22 +239,64 @@ function writeLocalPetAssets(assets) {
   }
 }
 
+function IntervalPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const total = Math.max(1, Number(value || 45));
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+  return <div className="relative">
+    <button type="button" className={fieldBase + " flex items-center justify-between text-left"} onClick={() => setOpen(!open)}>
+      <span>每 {hours ? `${hours} 小时 ` : ""}{String(minutes).padStart(2, "0")} 分钟</span><Clock3 size={14} className="text-sky-400" />
+    </button>
+    {open && <div className="absolute z-30 mt-2 w-full rounded-2xl border border-white/80 bg-white/90 p-3 shadow-[0_18px_40px_rgba(56,89,120,.18)] backdrop-blur-xl">
+      <div className="mb-2 text-[10px] text-slate-400">自定义提醒间隔</div>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="text-[10px] text-slate-500">小时<select className={fieldBase+" mt-1"} value={hours} onChange={e => { const h=Number(e.target.value); onChange(Math.max(1,h*60+minutes)); }}>
+          {Array.from({length:24},(_,i)=><option key={i} value={i}>{i} 小时</option>)}
+        </select></label>
+        <label className="text-[10px] text-slate-500">分钟<select className={fieldBase+" mt-1"} value={minutes} onChange={e => { const m=Number(e.target.value); onChange(Math.max(1,hours*60+m)); }}>
+          {Array.from({length:60},(_,i)=><option key={i} value={i}>{String(i).padStart(2,"0")} 分</option>)}
+        </select></label>
+      </div>
+      <button type="button" className="mt-3 w-full rounded-xl bg-sky-50 py-2 text-[11px] font-medium text-sky-600" onClick={() => setOpen(false)}>完成</button>
+    </div>}
+  </div>;
+}
+
+function DurationPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const minutes = Math.min(60, Math.max(1, Number(value || 10)));
+  return <div className="relative">
+    <button type="button" className={fieldBase + " flex items-center justify-between text-left"} onClick={() => setOpen(!open)}>
+      <span>{minutes} 分钟</span><Clock3 size={14} className="text-slate-400" />
+    </button>
+    {open && <div className="absolute z-30 mt-2 w-full rounded-2xl border border-white/80 bg-white/94 p-3 shadow-[0_18px_40px_rgba(56,89,120,.18)] backdrop-blur-xl">
+      <div className="mb-2 text-[10px] text-slate-400">休息时长</div>
+      <select className={fieldBase} value={minutes} onChange={event => onChange(event.target.value)}>
+        {Array.from({ length: 60 }, (_, index) => index + 1).map(item => <option key={item} value={item}>{item} 分钟</option>)}
+      </select>
+      <button type="button" className="mt-3 w-full rounded-xl bg-sky-50 py-2 text-[11px] font-medium text-sky-600" onClick={() => setOpen(false)}>完成</button>
+    </div>}
+  </div>;
+}
+
 function Root() {
   const surface = new URLSearchParams(window.location.search).get("surface");
   if (surface === "pet") return <PetOverlay />;
   return <App />;
 }
 
+const snoozeMinutes = 15;
+
 function App() {
   const desktopApi = window.petDesktop;
-  const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("reminder");
   const [settings, setSettings] = useState(initialSettings);
   const [draft, setDraft] = useState(initialSettings);
   const [paused, setPaused] = useState(false);
   const [notice, setNotice] = useState(null);
-  const [photos, setPhotos] = useState([]);
-  const [generatedVariants, setGeneratedVariants] = useState([]);
+  const [photos, setPhotos] = useState([fixedNailaoPhoto]);
+  const [generatedVariants, setGeneratedVariants] = useState(fixedNailaoVariants);
   const [saved, setSaved] = useState(false);
   const [analysisState, setAnalysisState] = useState({
     active: false,
@@ -185,9 +309,9 @@ function App() {
     message: "正在检查本地生成服务",
   });
   const [toast, setToast] = useState(null);
-  const [petSticker, setPetSticker] = useState(catCompanion);
-  const [petProfile, setPetProfile] = useState(null);
-  const inputRef = useRef(null);
+  const [petSticker, setPetSticker] = useState(fixedNailaoVariants[0].src);
+  const [petProfile, setPetProfile] = useState({ references: 9, generator: "固定猫咪", views: fixedNailaoViews });
+  const [imageModel, setImageModel] = useState("fixed-nailao");
   const savedTimerRef = useRef(null);
   const toastTimerRef = useRef(null);
   const analysisRunRef = useRef(0);
@@ -203,11 +327,32 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!desktopApi?.getSettings) return;
-    desktopApi.getSettings().then((storedSettings) => {
-      setSettings(storedSettings);
-      setDraft(storedSettings);
-    });
+    if (desktopApi?.getSettings) {
+      desktopApi.getSettings().then((storedSettings) => {
+        const mergedSettings = { ...initialSettings, ...storedSettings, generationEndpointToken: "" };
+        setSettings(mergedSettings);
+        setDraft(mergedSettings);
+        if (storedSettings?.generationEndpointUrl) {
+          setGenerationStatus({
+            state: "ready",
+            message: `已配置生成服务：${storedSettings.generationEndpointUrl}`,
+          });
+        }
+      });
+      return;
+    }
+    const storedSettings = readLocalSettings();
+    if (storedSettings) {
+      const mergedSettings = { ...initialSettings, ...storedSettings, generationEndpointToken: "" };
+      setSettings(mergedSettings);
+      setDraft(mergedSettings);
+      if (storedSettings.generationEndpointUrl) {
+        setGenerationStatus({
+          state: "ready",
+          message: `已配置生成服务：${storedSettings.generationEndpointUrl}`,
+        });
+      }
+    }
   }, [desktopApi]);
 
   useEffect(() => {
@@ -230,10 +375,15 @@ function App() {
         ? await desktopApi.getPetAssets()
         : readLocalPetAssets();
       if (cancelled || !storedAssets) return;
-      if (storedAssets.photos?.length) setPhotos(storedAssets.photos.slice(0, 10));
-      if (storedAssets.primarySticker) setPetSticker(storedAssets.primarySticker);
-      if (storedAssets.variants?.length) setGeneratedVariants(storedAssets.variants);
-      if (storedAssets.profile) setPetProfile(storedAssets.profile);
+      // This personal build uses bundled assets; uploaded-photo editing is not
+      // exposed because it is not connected to a new analysis pipeline.
+      // 旧版本把“抠图 + 变形”或本地 SVG 测试结果误存成了生成结果，不能继续展示。
+      // Personal build: bundled Nailao assets are the source of truth. Older
+      // cached payloads must never blank the fixed reference/action gallery.
+      setImageModel("fixed-nailao");
+      setPetSticker(nailaoWave);
+      setGeneratedVariants(fixedNailaoVariants);
+      setPetProfile({ references: 9, generator: "固定猫咪", views: fixedNailaoViews });
     };
     loadStoredAssets();
     return () => {
@@ -245,16 +395,7 @@ function App() {
     ? generatedVariants
     : companionActions.map((action) => ({ ...action, src: null, pending: true }));
 
-  const statusLabel = paused ? "今日已暂停" : settings.restEnabled ? "提醒运行中" : "提醒已关闭";
   const panelStatus = paused ? "已暂停" : draft.restEnabled ? "运行中" : "已关闭";
-
-  const openPanel = () => {
-    setDraft(settings);
-    setOpen(true);
-    setSaved(false);
-  };
-
-  const closePanel = () => setOpen(false);
 
   useEffect(() => () => clearTimeout(snoozeTimerRef.current), []);
 
@@ -265,90 +406,25 @@ function App() {
   };
 
   const savePanel = async () => {
-    const nextSettings = { ...draft };
-    setSettings(nextSettings);
-    desktopApi?.saveSettings?.(nextSettings);
-    setSaved(true);
-    pushToast(photos.length ? `保存成功，开始分析 ${photos.length} 张参考图` : "保存成功");
-    if (!photos.length) {
-      setAnalysisState({
-        active: false,
-        progress: 0,
-        stage: "",
-        detail: "",
-      });
-      clearTimeout(savedTimerRef.current);
-      savedTimerRef.current = setTimeout(() => setSaved(false), 1400);
-      return;
-    }
-
-    const runId = analysisRunRef.current + 1;
-    analysisRunRef.current = runId;
-    setAnalysisState({
-      active: true,
-      progress: 0.06,
-      stage: "正在整理参考图",
-      detail: `共 ${photos.length} 张照片`,
-    });
-
-    const sourcePool = photos.map((photo) => photo.src);
-    const result = await generatePetAssets(sourcePool, (progress, stage, detail) => {
-      if (analysisRunRef.current !== runId) return;
-      setAnalysisState({
-        active: progress < 1,
-        progress,
-        stage,
-        detail,
-      });
-    }, desktopApi);
-
-    if (analysisRunRef.current !== runId || !result) return;
-    if (result.status === "needs_configuration") {
-      const autoStatus = desktopApi?.ensureGenerationService ? await desktopApi.ensureGenerationService() : null;
-      if (autoStatus) setGenerationStatus(autoStatus);
-      pushToast("正在自动启动本地生成服务", "warning");
-      setAnalysisState({
-        active: true,
-        progress: 0.12,
-        stage: autoStatus?.state === "ready" ? "本地生成服务已就绪，准备重试" : "正在自动启动本地生成服务",
-        detail:
-          result.message ||
-          autoStatus?.message ||
-          "当前程序会先尝试自动拉起本地生成服务；如果第一次没找到引擎，会给出清晰提示。",
-      });
-      return;
-    }
-
-    setPetSticker(result.primarySticker);
-    setGeneratedVariants(result.variants);
-    setPetProfile(result.profile);
-    const assetPayload = {
-      photos,
-      profile: result.profile,
-      variants: result.variants,
-      primarySticker: result.primarySticker,
-      updatedAt: new Date().toISOString(),
+    const nextSettings = {
+      ...draft,
+      reminderIntervalMinutes: Math.max(1, Number(draft.reminderIntervalMinutes ?? draft.reminderInterval ?? 45)),
+      reminderInterval: String(Math.max(1, Number(draft.reminderIntervalMinutes ?? draft.reminderInterval ?? 45))),
+      generationEndpointUrl: "",
+      generationEndpointToken: "",
     };
-    try {
-      if (desktopApi?.savePetAssets) {
-        await desktopApi.savePetAssets(assetPayload);
-      } else {
-        writeLocalPetAssets(assetPayload);
-      }
-    } catch {
-      writeLocalPetAssets(assetPayload);
-    }
-    setAnalysisState({
-      active: false,
-      progress: 1,
-      stage: "分析完成",
-      detail: `${result.profile.references} 张参考图 · ${result.variants.length} 个动作`,
-    });
+    setDraft(nextSettings);
+    setSettings(nextSettings);
+    const persistedSettings = { ...nextSettings, generationEndpointToken: "" };
+    await desktopApi?.saveSettings?.(persistedSettings);
+    writeLocalSettings(persistedSettings);
+    setSaved(true);
+    pushToast("设置已保存");
     clearTimeout(savedTimerRef.current);
     savedTimerRef.current = setTimeout(() => setSaved(false), 1400);
   };
 
-  const showReminder = (source = open ? draft : settings) => {
+  const showReminder = (source = draft) => {
     const action = previewVariants[actionCursorRef.current % previewVariants.length] || {
       label: "小猫提醒",
       src: petSticker,
@@ -356,7 +432,7 @@ function App() {
     actionCursorRef.current += 1;
     const reminder = {
       body: source.reminderBody,
-      action,
+      action: { ...action, src: action.gif || action.src },
     };
 
     if (desktopApi?.showReminder) {
@@ -369,13 +445,13 @@ function App() {
 
   const snoozeReminder = () => {
     const reminderSource = {
-      reminderBody: notice?.body || (open ? draft : settings).reminderBody,
+      reminderBody: notice?.body || draft.reminderBody,
     };
     dismissNotice();
     clearTimeout(snoozeTimerRef.current);
     snoozeTimerRef.current = setTimeout(() => {
       showReminder(reminderSource);
-    }, 15 * 60 * 1000);
+    }, snoozeMinutes * 60 * 1000);
   };
 
   const dismissNotice = () => {
@@ -383,44 +459,10 @@ function App() {
     setNotice(null);
   };
 
-  const addPhotos = (event) => {
-    const incoming = Array.from(event.target.files || []).slice(0, 10 - photos.length);
-    incoming.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPhotos((current) => [
-          ...current,
-          {
-            id: `${file.name}-${file.lastModified}`,
-            name: file.name,
-            src: reader.result,
-          },
-        ].slice(0, 10));
-      };
-      reader.readAsDataURL(file);
-    });
-    event.target.value = "";
-  };
-
-  const removePhoto = (id) => setPhotos((current) => current.filter((photo) => photo.id !== id));
   const update = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
 
   return (
     <div className="min-h-dvh overflow-hidden bg-[radial-gradient(circle_at_14%_0%,rgba(219,240,249,0.95),transparent_32%),linear-gradient(180deg,#f9fbfc_0%,#edf2f5_48%,#e5ebef_100%)] p-5 text-slate-950 sm:p-6">
-      <div className="relative z-10 flex items-center gap-3">
-        <button
-          className="grid size-11 place-items-center rounded-[1.35rem] border border-white/75 bg-white/68 text-slate-700 shadow-[0_18px_40px_rgba(148,163,184,0.14)] backdrop-blur-2xl transition hover:-translate-y-0.5 hover:bg-white/84 hover:text-slate-950"
-          onClick={open ? closePanel : openPanel}
-          aria-label="打开休息时刻"
-        >
-          <Coffee size={18} strokeWidth={2.2} />
-        </button>
-        <div className="leading-tight">
-          <strong className="block text-xs font-semibold tracking-tight">休息时刻</strong>
-          <span className="mt-1 block text-[10px] text-slate-500">{statusLabel}</span>
-        </div>
-      </div>
-
       {toast && (
         <div className="fixed right-4 top-4 z-50 max-w-[320px] rounded-[1.35rem] border border-white/80 bg-white/72 px-4 py-3 shadow-[0_20px_60px_rgba(148,163,184,0.18)] backdrop-blur-2xl">
           <div className="flex items-start gap-3">
@@ -429,7 +471,7 @@ function App() {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-medium text-slate-950">{toast.message}</p>
-              <p className="mt-0.5 text-[10px] text-slate-500">{toast.tone === "success" ? "你的设置已经存好，马上进入分析。" : "这一步需要真实模型服务，不能用前端假生成。"}</p>
+              <p className="mt-0.5 text-[10px] text-slate-500">{toast.tone === "success" ? "你的设置已经存好，马上载入固定猫咪。" : "固定猫咪素材尚未准备好；当前照片仍已安全保存。"}</p>
             </div>
           </div>
         </div>
@@ -449,48 +491,32 @@ function App() {
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100/90">
             <div
               className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-400 to-emerald-300 transition-[width] duration-300"
-              style={{ width: `${Math.max(6, Math.min(100, (analysisState.progress || 0) * 100))}%` }}
+              style={{ width: `${Math.max(0, Math.min(100, (analysisState.progress || 0) * 100))}%` }}
             />
           </div>
           <p className="mt-2 truncate text-[10px] text-slate-500">{analysisState.detail || "上传参考图后，先生成五视图，再生成六个动作。"}</p>
         </div>
       )}
 
-      {open && (
-        <div
-          className="fixed inset-0 z-30 flex items-start justify-center bg-white/18 px-3 pb-3 pt-14 backdrop-blur-[18px]"
-          role="presentation"
-          onMouseDown={(event) => event.target === event.currentTarget && closePanel()}
-        >
-          <section
-            className="flex max-h-[calc(100dvh-72px)] w-full max-w-[448px] flex-col overflow-hidden rounded-[34px] border border-white/75 bg-white/54 shadow-[0_30px_90px_rgba(148,163,184,0.14)] backdrop-blur-[42px]"
-            role="dialog"
-            aria-modal="true"
-            aria-label="休息时刻"
-          >
-            <header className="flex items-start justify-between gap-4 border-b border-white/55 px-5 pb-4 pt-5">
+      <section
+        className="mx-auto flex max-h-[calc(100dvh-40px)] w-full max-w-[448px] flex-col overflow-hidden rounded-[34px] border border-white/75 bg-white/54 shadow-[0_30px_90px_rgba(148,163,184,0.14)] backdrop-blur-[42px]"
+        aria-label="休息时刻"
+      >
+            <header className="flex items-start gap-4 border-b border-white/55 px-5 pb-2.5 pt-3.5">
               <div>
-                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">菜单栏小工具</p>
                 <h1 className="text-[18px] font-medium leading-tight tracking-[-0.05em] text-slate-950">
                   轻轻提醒你休息一下。
                 </h1>
               </div>
-              <button
-                className="grid size-8 shrink-0 place-items-center rounded-full border border-white/65 bg-white/55 text-slate-400 transition hover:bg-white/80 hover:text-slate-900"
-                onClick={closePanel}
-                aria-label="关闭窗口"
-              >
-                <X size={17} />
-              </button>
             </header>
 
-            <div className="grid grid-cols-2 gap-2.5 px-5 pt-4">
+            <div className="grid grid-cols-2 gap-2.5 px-5 pt-3">
               <div className="rounded-[1.4rem] border border-white/70 bg-white/40 p-3.5 shadow-[0_14px_28px_rgba(148,163,184,0.08)] backdrop-blur-xl">
                 <span className="text-[10px] text-slate-400">下一次提醒</span>
                 <strong className="mt-2 block text-[26px] font-medium leading-none tracking-[-0.06em] text-slate-900">
                   10:30
                 </strong>
-                <p className="mt-2 text-[10px] text-slate-400">间隔 {draft.reminderInterval} 分钟</p>
+                <p className="mt-2 text-[10px] text-slate-400">间隔 {draft.reminderIntervalMinutes ?? draft.reminderInterval} 分钟</p>
               </div>
               <div className="rounded-[1.4rem] border border-white/70 bg-white/40 p-3.5 shadow-[0_14px_28px_rgba(148,163,184,0.08)] backdrop-blur-xl">
                 <span className="text-[10px] text-slate-400">今日状态</span>
@@ -501,23 +527,23 @@ function App() {
               </div>
             </div>
 
-            <div className="mx-5 mt-4 grid grid-cols-2 rounded-full border border-white/70 bg-white/38 p-1 backdrop-blur-xl">
+            <div className="mx-5 mt-2.5 grid grid-cols-2 gap-1 rounded-2xl border border-white/70 bg-slate-100/55 p-1.5 backdrop-blur-xl">
               <button
-                className={`h-9 rounded-full text-[11px] outline-none transition focus-visible:ring-2 focus-visible:ring-sky-200/70 ${tab === "reminder" ? "bg-white font-medium text-slate-950 shadow-[0_10px_20px_rgba(148,163,184,0.14)]" : "font-normal text-slate-500 hover:text-slate-900"}`}
+                className={`h-9 rounded-xl text-[11px] outline-none transition focus-visible:ring-2 focus-visible:ring-sky-200/70 ${tab === "reminder" ? "bg-slate-700 font-semibold text-white shadow-[0_8px_18px_rgba(71,85,105,0.16)]" : "font-medium text-slate-500 hover:bg-white/70 hover:text-slate-900"}`}
                 onClick={() => setTab("reminder")}
               >
                 设置提醒
               </button>
               <button
-                className={`h-9 rounded-full text-[11px] outline-none transition focus-visible:ring-2 focus-visible:ring-sky-200/70 ${tab === "shape" ? "bg-white font-medium text-slate-950 shadow-[0_10px_20px_rgba(148,163,184,0.14)]" : "font-normal text-slate-500 hover:text-slate-900"}`}
+                className={`h-9 rounded-xl text-[11px] outline-none transition focus-visible:ring-2 focus-visible:ring-sky-200/70 ${tab === "shape" ? "bg-slate-700 font-semibold text-white shadow-[0_8px_18px_rgba(71,85,105,0.16)]" : "font-medium text-slate-500 hover:bg-white/70 hover:text-slate-900"}`}
                 onClick={() => setTab("shape")}
               >
-                设置形象
+                  宠物形象
               </button>
             </div>
 
             {tab === "reminder" && (
-              <div className="overflow-auto px-5 pb-4 pt-4">
+              <div className="overflow-auto px-5 pb-3 pt-3">
                 <section className="space-y-3.5">
                   <SectionHead number="01" title="提醒时间" description="把提醒节奏改成你不会抗拒的样子。" />
 
@@ -529,18 +555,10 @@ function App() {
                       <input className={fieldBase} type="time" value={draft.end} onChange={(event) => update("end", event.target.value)} />
                     </Field>
                     <Field label="提醒间隔">
-                      <select className={fieldBase} value={draft.reminderInterval} onChange={(event) => update("reminderInterval", event.target.value)}>
-                        <option value="30">每 30 分钟</option>
-                        <option value="45">每 45 分钟</option>
-                        <option value="60">每 60 分钟</option>
-                      </select>
+                      <IntervalPicker value={draft.reminderIntervalMinutes ?? draft.reminderInterval} onChange={(minutes) => update("reminderIntervalMinutes", minutes)} />
                     </Field>
                     <Field label="休息时长">
-                      <select className={fieldBase} value={draft.restDuration} onChange={(event) => update("restDuration", event.target.value)}>
-                        <option value="5">5 分钟</option>
-                        <option value="10">10 分钟</option>
-                        <option value="15">15 分钟</option>
-                      </select>
+                      <DurationPicker value={draft.restDuration} onChange={(minutes) => update("restDuration", minutes)} />
                     </Field>
                   </div>
 
@@ -585,68 +603,42 @@ function App() {
             )}
 
             {tab === "shape" && (
-              <div className="overflow-auto px-5 pb-4 pt-4">
+              <div className="overflow-auto px-5 pb-3 pt-3">
                 <section className="space-y-3.5">
-                  <SectionHead number="03" title="提醒形象" description="宠物或人像都可以，最多 10 张参考图。" />
-
-                  <button
-                    className="group relative flex min-h-24 w-full items-center gap-4 overflow-hidden rounded-[1.7rem] border border-dashed border-sky-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(232,246,252,0.74))] px-4 py-4 text-left shadow-[0_18px_42px_rgba(148,163,184,0.12)] backdrop-blur-2xl transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-white/88"
-                    onClick={() => inputRef.current?.click()}
-                  >
-                    <span className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(125,211,252,0.18),transparent_28%),radial-gradient(circle_at_82%_80%,rgba(167,243,208,0.18),transparent_30%)]" />
-                    <span className="relative grid size-14 shrink-0 place-items-center rounded-[1.25rem] border border-white/80 bg-white/72 text-sky-500 shadow-[0_12px_24px_rgba(125,211,252,0.18)] transition group-hover:scale-[1.03]">
-                      <ImagePlus size={24} />
-                    </span>
-                    <span className="relative min-w-0">
-                      <span className="block text-[13px] font-medium tracking-[-0.02em] text-slate-950">上传猫咪参考照片</span>
-                      <span className="mt-1 block text-[10px] leading-relaxed text-slate-500">
-                        最多 10 张，建议包含正脸、左右侧脸、趴卧、站立或走动，这样本地模型才能生成更稳定的五视图。
-                      </span>
-                      <span className="mt-2 inline-flex rounded-full border border-white/80 bg-white/68 px-2.5 py-1 text-[9px] font-medium text-slate-500">
-                        已上传 {photos.length}/10 · JPG / PNG
-                      </span>
-                    </span>
-                  </button>
-
-                  {generationStatus?.state && generationStatus.state !== "idle" && (
-                    <div className="rounded-[1.35rem] border border-white/70 bg-white/50 px-4 py-3 text-[10px] text-slate-500 backdrop-blur-xl">
-                      <span className="inline-flex items-center gap-2 font-medium text-slate-700">
-                        <span
-                          className={`size-2 rounded-full ${
-                            generationStatus.state === "ready"
-                              ? "bg-emerald-400"
-                              : generationStatus.state === "starting"
-                                ? "bg-amber-400"
-                                : "bg-slate-300"
-                          }`}
-                        />
-                        {generationStatus.state === "ready" ? "本地生成服务已就绪" : generationStatus.state === "starting" ? "正在自动启动本地生成服务" : "未找到本地生成引擎"}
-                      </span>
-                      <p className="mt-1 leading-relaxed">{generationStatus.message}</p>
-                    </div>
-                  )}
+                  <SectionHead number="03" title="宠物形象" description="固定猫咪的参考视图和动作。" />
 
                   <div className="relative overflow-hidden rounded-[1.8rem] border border-white/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.88),rgba(235,244,250,0.72)_52%,rgba(227,236,242,0.88))] p-4 shadow-[0_18px_34px_rgba(148,163,184,0.1)] backdrop-blur-xl">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(255,255,255,0.85),transparent_30%),radial-gradient(circle_at_82%_18%,rgba(191,219,254,0.45),transparent_20%),radial-gradient(circle_at_74%_80%,rgba(209,250,229,0.35),transparent_24%)]" />
                     <div className="relative flex h-44 items-end justify-between">
                       <div className="max-w-[52%] pb-2">
-                        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">桌面角落预览</p>
-                        <h3 className="mt-2 text-[14px] font-medium tracking-[-0.03em] text-slate-900">本地模型生成的小猫会以透明背景待在桌面右上角。</h3>
-                        <p className="mt-2 text-[10px] leading-relaxed text-slate-500">气泡里只有提醒正文，点“已完成”关闭，点“稍后” 15 分钟后再回来。</p>
+                        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">固定猫咪预览</p>
+                        <h3 className="mt-2 text-[14px] font-medium tracking-[-0.03em] text-slate-900">生成的小猫会以透明背景待在桌面右上角。</h3>
+                        <p className="mt-2 text-[10px] leading-relaxed text-slate-500">气泡里只有提醒正文，点“好的”关闭，点“稍后” {snoozeMinutes} 分钟后再回来。</p>
                       </div>
                       <div className="relative flex items-end justify-end pb-1">
                         <div className="absolute -right-6 top-10 h-16 w-16 rounded-full bg-white/60 blur-2xl" />
-                        <img
-                          className="h-36 w-36 select-none object-contain drop-shadow-[0_24px_26px_rgba(15,23,42,0.18)] motion-safe:animate-[pet-float_5s_ease-in-out_infinite]"
-                          src={previewVariants[0]?.src || petSticker}
-                          alt="桌面小猫预览"
-                        />
+                        {previewVariants[0]?.gif || previewVariants[0]?.src || imageModel ? (
+                          <img
+                            className="h-36 w-36 select-none object-contain drop-shadow-[0_24px_26px_rgba(15,23,42,0.18)] motion-safe:animate-[pet-float_5s_ease-in-out_infinite]"
+                            src={previewVariants[0]?.gif || previewVariants[0]?.src || petSticker}
+                            alt="桌面小猫预览"
+                          />
+                        ) : (
+                          <div className="grid h-36 w-36 place-items-center rounded-[2rem] border border-dashed border-slate-300/70 bg-white/45 px-4 text-center text-[10px] leading-relaxed text-slate-400">
+                            <span>
+                              <Sparkles className="mx-auto mb-2 text-sky-400" size={23} />
+                              等待固定猫咪
+                              <br />
+                              生成你的猫咪动作
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="relative mt-2 flex items-center justify-between">
                       <div className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-2.5 py-1 text-[9px] text-slate-500 backdrop-blur-xl">
                         <span className="size-1.5 rounded-full" style={{ backgroundColor: petProfile?.dominantColor || "#34d399" }} />
-                        {petProfile?.generator || "本地模型待生成"} / {petProfile?.references || photos.length || 1} 张参考
+                        {petProfile?.generator || "固定猫咪"} / {petProfile?.references || photos.length || 1} 张参考
                       </div>
                       <button className={buttonBase} onClick={() => showReminder(draft)}>
                         <Sparkles size={14} />
@@ -656,16 +648,10 @@ function App() {
                   </div>
 
                   <section className="space-y-2.5">
-                    <SectionHead number="04" title="五视图生成" description="用 10 张参考图先生成统一猫咪身份的 5 个透明背景视图。" />
-                    <div className="grid grid-cols-5 gap-2">
-                      {(petProfile?.views || identityViewSpecs).map((view) => (
-                        <IdentityViewCard key={view.key} view={view} />
-                      ))}
+                    <SectionHead number="04" title="6 个动作 GIF" description="根据参考视图生成 6 个连续序列帧动画。" />
+                    <div className="mb-2 rounded-[1.25rem] border border-sky-100/80 bg-sky-50/45 px-3 py-2.5 text-[10px] leading-relaxed text-slate-500">
+                      每个 GIF 都由连续动作帧组成，循环播放约 3 秒，背景是真正透明。
                     </div>
-                  </section>
-
-                  <section className="space-y-2.5">
-                    <SectionHead number="05" title="六个动作" description="再基于五视图调用本地生成工作流，生成 6 个一致身份的透明动作图。" />
                     <div className="grid grid-cols-3 gap-2.5">
                       {previewVariants.map((action) => (
                         <CatPose key={action.label} action={action} />
@@ -674,77 +660,51 @@ function App() {
                   </section>
 
                   <section className="space-y-2.5">
-                    <SectionHead number="06" title="我的图片" description="你上传的参考照会保留在这里，方便确认这 10 张图有没有上传完整。" />
-                    {photos.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-2.5">
-                        {photos.map((photo) => (
-                          <div className="relative aspect-square overflow-hidden rounded-2xl bg-slate-100" key={photo.id}>
-                            <img className="size-full object-cover" src={photo.src} alt={photo.name} />
-                            <button
-                              className="absolute right-1.5 top-1.5 grid size-6 place-items-center rounded-lg bg-slate-950/55 text-white transition hover:bg-slate-950/80"
-                              onClick={() => removePhoto(photo.id)}
-                              aria-label={`删除 ${photo.name}`}
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="rounded-[1.5rem] border border-dashed border-white/70 bg-white/45 px-4 py-5 text-[10px] text-slate-400 backdrop-blur-xl">
-                        还没有上传图片。
-                      </div>
-                    )}
+                    <SectionHead number="05" title="参考视图" description="分析图片里的主体外观，生成 5 张全新视图。" />
+                    <div className="mb-2 rounded-[1.25rem] border border-sky-100/80 bg-sky-50/45 px-3 py-2.5 text-[10px] leading-relaxed text-slate-500">
+                      {imageModel ? "固定猫咪参考视图已准备好。" : "参考视图准备中。"}
+                    </div>
+                    <div className="grid grid-cols-5 gap-2">
+                      {(petProfile?.views || identityViewSpecs).map((view) => (
+                        <IdentityViewCard key={view.key} view={view} />
+                      ))}
+                    </div>
                   </section>
+
                 </section>
               </div>
             )}
 
-            <footer className="flex items-center justify-between gap-3 border-t border-white/55 px-5 py-4">
-              <span className="inline-flex min-w-0 items-center gap-1.5 text-[10px] text-slate-400">
-                <Settings2 size={14} />
-                顶部图标内打开设置
-              </span>
+            <footer className="flex items-center justify-end gap-2.5 border-t border-white/55 px-5 py-3">
+              <span className="min-w-0" aria-hidden="true" />
               <div className="flex gap-2">
-                <button className={buttonBase} onClick={closePanel}>关闭</button>
                 <button className={primaryButton} onClick={savePanel}>
                   <Check size={14} />
-                  保存并分析
+                  保存
                 </button>
               </div>
             </footer>
-          </section>
-        </div>
-      )}
-
-      <input
-        ref={inputRef}
-        className="hidden"
-        type="file"
-        accept="image/png,image/jpeg,image/heic"
-        multiple
-        onChange={addPhotos}
-      />
+      </section>
 
       {notice && (
         <div className="fixed right-4 top-4 z-50 flex items-start gap-3">
           <div className="relative mt-8 flex min-w-[250px] max-w-[320px] items-start rounded-[1.6rem] border border-white/76 bg-white/68 p-3.5 shadow-[0_18px_50px_rgba(41,53,66,0.16)] backdrop-blur-2xl">
             <div className="min-w-0 pr-2">
-              <span className="block text-[9px] font-semibold uppercase tracking-[0.12em] text-sky-500/70">桌面宠物提醒</span>
+              <span className="pet-drag-handle block pb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#52758b]">桌面宠物提醒</span>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{notice.body}</p>
               <div className="mt-3 flex gap-2">
-                <button className="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-slate-950 px-2.5 text-[10px] font-semibold text-white" onClick={dismissNotice}>
+                <button className="inline-flex min-h-7 items-center gap-1.5 rounded-xl bg-slate-700 px-2.5 text-[10px] font-semibold text-white" onClick={dismissNotice}>
                   <Check size={13} />
-                  已完成
+                  好的
                 </button>
-                <button className="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-white px-2.5 text-[10px] font-semibold text-slate-500 shadow-[0_8px_18px_rgba(148,163,184,0.12)]" onClick={snoozeReminder}>
+                <button className="inline-flex min-h-7 items-center gap-1.5 rounded-xl bg-white px-2.5 text-[10px] font-semibold text-slate-500 shadow-[0_8px_18px_rgba(148,163,184,0.12)]" onClick={snoozeReminder}>
                   <Clock3 size={13} />
-                  稍后
+                  稍后（{snoozeMinutes}分钟）
                 </button>
               </div>
             </div>
-            <button
-              className="grid size-7 shrink-0 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
+          <button
+            className="grid size-7 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
               onClick={dismissNotice}
               aria-label="关闭提醒"
             >
@@ -755,7 +715,7 @@ function App() {
             <div className="absolute -right-2 top-14 h-8 w-8 rounded-full bg-white/55 blur-xl" />
             <img
               className="h-[164px] w-[164px] select-none object-contain drop-shadow-[0_30px_34px_rgba(15,23,42,0.28)] motion-safe:animate-[pet-pop_460ms_cubic-bezier(.2,.84,.18,1)]"
-              src={notice.action?.src || petSticker}
+              src={notice.action?.gif || notice.action?.src || petSticker}
               alt={notice.action?.label || "提醒小猫"}
             />
           </div>
@@ -818,25 +778,25 @@ function PetOverlay() {
   }
 
   return (
-    <div className="h-dvh w-dvw overflow-hidden bg-transparent">
+    <div className="pet-drag-region h-dvh w-dvw overflow-hidden bg-transparent">
       <div className="absolute right-0 top-0 flex items-start gap-3 bg-transparent p-2">
-        <div className="relative mt-8 flex min-w-[250px] max-w-[320px] items-start rounded-[1.6rem] border border-white/76 bg-white/68 p-3.5 shadow-[0_18px_50px_rgba(41,53,66,0.16)] backdrop-blur-2xl">
-          <div className="min-w-0 pr-2">
-            <span className="block text-[9px] font-semibold uppercase tracking-[0.12em] text-sky-500/70">桌面宠物提醒</span>
+        <div className="pet-drag-region relative mt-8 flex min-w-[250px] max-w-[320px] items-start rounded-[1.6rem] border border-white/76 bg-white/68 p-3.5 shadow-[0_18px_50px_rgba(41,53,66,0.16)] backdrop-blur-2xl">
+            <div className="min-w-0 pr-2">
+              <span className="pet-drag-handle block pb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#52758b]">桌面宠物提醒</span>
             <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{notice.body}</p>
-            <div className="mt-3 flex gap-2">
-              <button className="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-slate-950 px-2.5 text-[10px] font-semibold text-white" onClick={dismiss}>
+              <div className="pet-no-drag mt-3 flex gap-2">
+                <button className="pet-no-drag inline-flex min-h-7 items-center gap-1.5 rounded-xl bg-slate-700 px-2.5 text-[10px] font-semibold text-white" onClick={dismiss}>
                 <Check size={13} />
-                已完成
+                好的
               </button>
-              <button className="inline-flex min-h-7 items-center gap-1.5 rounded-full bg-white px-2.5 text-[10px] font-semibold text-slate-500 shadow-[0_8px_18px_rgba(148,163,184,0.12)]" onClick={snooze}>
+                <button className="pet-no-drag inline-flex min-h-7 items-center gap-1.5 rounded-xl bg-white px-2.5 text-[10px] font-semibold text-slate-500 shadow-[0_8px_18px_rgba(148,163,184,0.12)]" onClick={snooze}>
                 <Clock3 size={13} />
-                稍后
+                稍后（{snoozeMinutes}分钟）
               </button>
             </div>
           </div>
           <button
-            className="grid size-7 shrink-0 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
+            className="pet-no-drag grid size-7 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
             onClick={dismiss}
             aria-label="关闭提醒"
           >
@@ -846,8 +806,8 @@ function PetOverlay() {
         <div className="relative -ml-2">
           <div className="absolute -right-2 top-14 h-8 w-8 rounded-full bg-white/55 blur-xl" />
           <img
-            className="h-[164px] w-[164px] select-none object-contain drop-shadow-[0_30px_34px_rgba(15,23,42,0.28)] motion-safe:animate-[pet-pop_460ms_cubic-bezier(.2,.84,.18,1)]"
-            src={notice.action?.src || catCompanion}
+            className="h-[164px] w-[164px] select-none object-contain drop-shadow-[0_30px_34px_rgba(15,23,42,0.28)] motion-safe:animate-[pet-breathe_4s_ease-in-out_infinite]"
+            src={notice.action?.gif || notice.action?.src || catCompanion}
             alt={notice.action?.label || "提醒小猫"}
             draggable="false"
           />
@@ -861,8 +821,8 @@ function CatPose({ action }) {
   return (
     <div className="overflow-hidden rounded-[1rem] border border-white/80 bg-white/52 p-1 shadow-[0_10px_24px_rgba(148,163,184,0.08)] backdrop-blur-xl">
       <div className={`aspect-square overflow-hidden rounded-[0.85rem] bg-gradient-to-br ${action.tint}`}>
-        {action.src ? (
-          <img className="size-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(15,23,42,0.14)]" src={action.src} alt={action.label} />
+        {action.gif || action.src ? (
+          <img className="size-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(15,23,42,0.14)]" src={action.gif || action.src} alt={action.label} />
         ) : (
           <div className="grid size-full place-items-center p-2 text-center text-[8px] leading-tight text-slate-400">
             <span>
@@ -895,9 +855,6 @@ function IdentityViewCard({ view }) {
             </span>
           </div>
         )}
-        <span className="absolute left-2 top-2 rounded-full border border-white/80 bg-white/78 px-2 py-0.5 text-[8px] font-medium text-slate-500 backdrop-blur-xl">
-          {view.key?.toUpperCase?.() || view.label}
-        </span>
       </div>
       <div className="px-1.5 pb-1.5 pt-1">
         <p className="truncate text-center text-[8px] font-medium text-slate-600">{view.label}</p>
@@ -907,59 +864,163 @@ function IdentityViewCard({ view }) {
   );
 }
 
-async function generatePetAssets(sourcePool, onProgress, desktopApi) {
+function buildPetGenerationPlan(referenceCount) {
+  return {
+    provider: "fixed-nailao",
+    modelFamily: "固定猫咪素材",
+    referenceCount,
+    outputContract: {
+      views: 5,
+      actions: 6,
+      format: "transparent PNG data URL or file URL",
+    },
+    stages: [
+      {
+        id: "fixed-nailao-reference-views",
+        type: "image-edit",
+        input: "all-reference-photos",
+        output: "five new transparent-background views of the same real cat",
+        prompt:
+          "Use all uploaded photos as identity references for the same real cat. Generate five new transparent-background images: front, left side, right side, calm resting pose, and dynamic pose. Preserve the cat's exact fur colors, markings, face shape, eyes, ears, body proportions, and tail. Gently clean visible eye discharge/crust from both eye corners while preserving natural eyes, eyelids and fur detail; no beauty-filter smoothing. This is image-to-image generation: never return an uploaded photo, crop it, mirror it, rotate it, or warp it.",
+      },
+      {
+        id: "fixed-nailao-action-set",
+        type: "image-edit",
+        input: "generated-five-view-renders",
+        output: "six transparent-background desktop pet action sprites",
+        prompt:
+          "Use the generated five-view identity images as references and create six new, visibly different transparent-background realistic cat actions: waving attention, lying down, side glance, stretching, calm companion, and blinking prompt. Keep the same cat identity, markings, proportions, and fur across every action. Gently clean visible eye discharge/crust from both eye corners while preserving natural eyes, eyelids and fur detail; no beauty-filter smoothing. Do not return or directly edit any uploaded source photo. Do not add a cup or other prop.",
+      },
+    ],
+    constraints: [
+      "must-return-five-new-views",
+      "must-return-six-new-actions",
+      "no-source-photo-as-final-output",
+      "transparent-png-output",
+    ],
+  };
+}
+
+function getGenerationConfig(settings = {}) {
+  return {
+    customEndpoint: settings.generationEndpointUrl || "",
+    customToken: settings.generationEndpointToken || "",
+  };
+}
+
+async function postJson(url, payload, headers = {}) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+async function generatePetAssets(sourcePool, onProgress, desktopApi, settings = {}) {
+  // This personal build uses the already generated Nailao assets. It never
+  // asks for an API key and never probes or starts a local generation engine.
+  onProgress?.(0.35, "正在载入固定猫咪", "参考视图和动作已准备好");
+  await new Promise((resolve) => setTimeout(resolve, 220));
+  onProgress?.(1, "分析完成", "固定猫咪 · 5 张参考视图 · 6 个动作");
+  return {
+    pipelineVersion: petGenerationPipelineVersion,
+    imageModel: "fixed-nailao",
+    profile: { references: 9, generator: "固定猫咪", views: fixedNailaoViews },
+    variants: fixedNailaoVariants,
+    primarySticker: nailaoWave,
+  };
+  /* legacy remote generation flow retained below for future work */
   const sources = Array.isArray(sourcePool) && sourcePool.length ? sourcePool.slice(0, 10) : [catCompanion];
+  const generationConfig = getGenerationConfig(settings);
+  const plan = buildPetGenerationPlan(sources.length);
 
   onProgress?.(0.04, "正在整理参考图", `共 ${sources.length} 张照片`);
 
-  if (!desktopApi?.generatePetAssets) {
-    return {
-      status: "needs_configuration",
-      message: "网页预览没有连接桌面端生成接口。请运行 macOS 桌面 App，或配置本地生成服务后再生成。",
-    };
+  if (desktopApi?.generatePetAssets || generationConfig.customEndpoint) {
+    onProgress?.(
+      0.16,
+      "载入固定猫咪",
+      desktopApi?.generatePetAssets ? "通过桌面 App 调用 OpenAI" : "通过本地网页服务调用 OpenAI",
+    );
+
+    try {
+      const rawResult = desktopApi?.generatePetAssets
+        ? await desktopApi.generatePetAssets({
+            photos: sources,
+            viewSpecs: identityViewSpecs,
+            actionSpecs: companionActions.map(({ label, sourceKey }) => ({ label, sourceKey })),
+            generationSettings: generationConfig,
+          })
+        : await postJson(
+            generationConfig.customEndpoint,
+            {
+              photos: sources,
+              plan,
+            },
+            generationConfig.customToken ? { Authorization: `Bearer ${generationConfig.customToken}` } : {},
+          );
+
+      if (rawResult?.ok === false || rawResult?.error) {
+        throw new Error(rawResult.message || rawResult.error || "生成服务返回失败");
+      }
+
+      if (rawResult?.ok || rawResult?.views || rawResult?.variants) {
+        const views = normalizeGeneratedViews(rawResult.views);
+        const variants = normalizeGeneratedVariants(rawResult.variants);
+
+        if (views.length >= 5 && variants.length >= 6 && views.every((view) => view.src) && variants.every((variant) => variant.src)) {
+          onProgress?.(0.72, "参考视图已准备好", "正在整理六个新动作");
+          onProgress?.(1, "分析完成", `${sources.length} 张参考图 · ${variants.length} 个动作`);
+
+          return {
+            pipelineVersion: petGenerationPipelineVersion,
+            imageModel: rawResult.imageModel || rawResult.provider || "image2",
+            profile: {
+              references: sources.length,
+              generator: rawResult.profile?.generator || rawResult.provider || "本地免费模型",
+              ...(rawResult.profile || {}),
+              views,
+            },
+            variants,
+            primarySticker: rawResult.primarySticker || views[0]?.src || variants[0]?.src,
+          };
+        }
+        return {
+          status: "needs_configuration",
+          code: "IMAGE2_CONTRACT_INVALID",
+          message: "生成服务没有返回 5 个新视图和 6 个新动作，已拒绝使用上传原图作为结果。",
+        };
+      }
+    } catch (error) {
+      return {
+        status: "needs_configuration",
+        code: "IMAGE2_SERVICE_ERROR",
+        message: `固定猫咪素材调用失败：${error.message}`,
+      };
+    }
   }
 
-  onProgress?.(0.16, "连接本地免费生成服务", "默认使用 ComfyUI 或自定义 PET_GENERATION_ENDPOINT_URL");
-
-  const response = await desktopApi.generatePetAssets({
-    photos: sources,
-    viewSpecs: identityViewSpecs,
-    actionSpecs: companionActions.map(({ label, sourceKey }) => ({ label, sourceKey })),
-  });
-
-  if (!response?.ok) {
-    return {
-      status: "needs_configuration",
-      message: response?.message || "本地生成服务还没有准备好。",
-      code: response?.code,
-      plan: response?.plan,
-    };
-  }
-
-  const views = normalizeGeneratedViews(response.views);
-  const variants = normalizeGeneratedVariants(response.variants);
-
-  if (views.length < 5 || variants.length < 6 || views.some((view) => !view.src) || variants.some((variant) => !variant.src)) {
-    return {
-      status: "needs_configuration",
-      message: "生成服务已响应，但输出不完整：需要 5 个五视图和 6 个动作。",
-      plan: response.plan,
-    };
-  }
-
-  onProgress?.(0.72, "已生成五视图", "正在整理六个动作和透明图");
-  onProgress?.(1, "分析完成", `${sources.length} 张参考图 · ${variants.length} 个动作`);
-
+  onProgress?.(0.12, "等待固定猫咪", "已整理全部参考图");
   return {
-    profile: {
-      references: sources.length,
-      generator: response.profile?.generator || response.provider || "本地免费模型",
-      ...(response.profile || {}),
-      views,
-    },
-    variants,
-    primarySticker: response.primarySticker || views[0]?.src || variants[0]?.src,
+    status: "needs_configuration",
+    code: "IMAGE2_SERVICE_REQUIRED",
+    message: "已保存全部参考图。",
   };
+}
+
+function normalizeImageModel(model) {
+  if (!model) return null;
+  if (typeof model === "string") return model;
+  return model.url || model.src || model.data || null;
 }
 
 function normalizeGeneratedViews(views) {

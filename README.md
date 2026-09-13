@@ -47,8 +47,8 @@ release/
 
 ```text
 10 张参考照
-→ 本地生成服务归纳同一只猫的五视图
-→ 基于五视图生成 6 个动作
+→ GPT Image 2 综合 1-10 张照片生成同一只猫的 5 张全新视图
+→ GPT Image 2 基于五视图再次生成 6 个动作
 → 输出透明 PNG
 → App 保存并用于桌面提醒
 ```
@@ -76,8 +76,9 @@ PET_GENERATION_ENDPOINT_URL=http://127.0.0.1:8787/generate npm run desktop:dev
 
 推荐方向：
 
-- ComfyUI + FLUX / SDXL 参考图工作流
-- IP-Adapter / Redux / LoRA 做宠物身份一致性
+- OpenAI GPT Image 2 `/v1/images/edits` 工作流
+- 第二阶段 GPT Image 2 动作工作流（只接收第一阶段生成的五视图）
+- IP-Adapter / Redux / LoRA 作为身份一致性辅助
 - rembg / RMBG 做透明背景输出
 
 ## 项目结构

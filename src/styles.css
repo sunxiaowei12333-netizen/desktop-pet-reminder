@@ -25,6 +25,15 @@ body.pet-window #root {
   overflow: hidden;
 }
 
+.pet-drag-region {
+  -webkit-app-region: drag;
+}
+
+.pet-no-drag,
+.pet-no-drag button {
+  -webkit-app-region: no-drag;
+}
+
 button,
 input,
 select,
@@ -59,4 +68,11 @@ button {
   50% {
     transform: translateY(-6px);
   }
+}
+
+@keyframes pet-breathe {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  25% { transform: translateY(-4px) scale(1.015) rotate(-1deg); }
+  50% { transform: translateY(1px) scale(0.99) rotate(1deg); }
+  75% { transform: translateY(-3px) scale(1.01) rotate(0deg); }
 }
