@@ -29,6 +29,9 @@ import nailaoStretchImage2Gif from "./assets/nailao/nailao-action-stretch-image2
 import nailaoCompanionImage2Gif from "./assets/nailao/nailao-action-companion-image2.gif";
 import nailaoBlinkImage2Gif from "./assets/nailao/nailao-action-blink-image2.gif";
 import "./styles.css";
+import PetOverlay from "./PetOverlay.jsx";
+import SmoothPet from "./SmoothPet.jsx";
+import useReminderSchedule, { formatReminderTime } from "./useReminderSchedule.js";
 
 const initialSettings = {
   restEnabled: true,
@@ -276,7 +279,7 @@ function DurationPicker({ value, onChange }) {
 
 function Root() {
   const surface = new URLSearchParams(window.location.search).get("surface");
-  if (surface === "pet") return <PetOverlay />;
+  if (surface === "pet" || surface === "reminder") return <PetOverlay />;
   return <App />;
 }
 
@@ -288,6 +291,7 @@ function App() {
   const [settings, setSettings] = useState(initialSettings);
   const [draft, setDraft] = useState(initialSettings);
   const [paused, setPaused] = useState(false);
+  const reminderSchedule = useReminderSchedule(desktopApi, setPaused);
   const [notice, setNotice] = useState(null);
   const [photos, setPhotos] = useState([fixedNailaoPhoto]);
   const [generatedVariants, setGeneratedVariants] = useState(fixedNailaoVariants);
@@ -389,7 +393,9 @@ function App() {
     ? generatedVariants
     : companionActions.map((action) => ({ ...action, src: null, pending: true }));
 
-  const panelStatus = paused ? "已暂停" : draft.restEnabled ? "运行中" : "已关闭";
+  const panelStatus = reminderSchedule
+    ? reminderSchedule.paused ? "已暂停" : reminderSchedule.enabled ? "运行中" : "已关闭"
+    : paused ? "已暂停" : draft.restEnabled ? "运行中" : "已关闭";
 
   useEffect(() => () => clearTimeout(snoozeTimerRef.current), []);
 
@@ -508,9 +514,9 @@ function App() {
               <div className="rounded-[1.4rem] border border-white/70 bg-white/40 p-3.5 shadow-[0_14px_28px_rgba(148,163,184,0.08)] backdrop-blur-xl">
                 <span className="text-[10px] text-slate-400">下一次提醒</span>
                 <strong className="mt-2 block text-[26px] font-medium leading-none tracking-[-0.06em] text-slate-900">
-                  10:30
+                  {formatReminderTime(reminderSchedule)}
                 </strong>
-                <p className="mt-2 text-[10px] text-slate-400">间隔 {draft.reminderIntervalMinutes ?? draft.reminderInterval} 分钟</p>
+                <p className="mt-2 text-[10px] text-slate-400">间隔 {reminderSchedule?.intervalMinutes ?? settings.reminderIntervalMinutes ?? settings.reminderInterval} 分钟</p>
               </div>
               <div className="rounded-[1.4rem] border border-white/70 bg-white/40 p-3.5 shadow-[0_14px_28px_rgba(148,163,184,0.08)] backdrop-blur-xl">
                 <span className="text-[10px] text-slate-400">今日状态</span>
@@ -587,7 +593,12 @@ function App() {
                       <Bell size={14} />
                       测试提醒
                     </button>
-                    <button className={buttonBase} onClick={() => setPaused((value) => !value)}>
+                    <button className={buttonBase} onClick={async () => {
+                      if (desktopApi?.setReminderPaused) {
+                        const status = await desktopApi.setReminderPaused(!paused);
+                        setPaused(status.paused);
+                      } else setPaused(value => !value);
+                    }}>
                       {paused ? <Play size={14} /> : <Pause size={14} />}
                       {paused ? "恢复" : "暂停"}
                     </button>
@@ -740,83 +751,12 @@ function Field({ label, children }) {
   );
 }
 
-function PetOverlay() {
-  const desktopApi = window.petDesktop;
-  const [notice, setNotice] = useState(null);
-
-  useEffect(() => {
-    document.documentElement.classList.add("pet-window");
-    document.body.classList.add("pet-window");
-    const dispose = desktopApi?.onReminder?.((reminder) => {
-      setNotice(reminder);
-    });
-    return () => {
-      document.documentElement.classList.remove("pet-window");
-      document.body.classList.remove("pet-window");
-      dispose?.();
-    };
-  }, [desktopApi]);
-
-  const dismiss = () => {
-    setNotice(null);
-    desktopApi?.dismissReminder?.();
-  };
-
-  const snooze = () => {
-    setNotice(null);
-    desktopApi?.snoozeReminder?.(15);
-  };
-
-  if (!notice) {
-    return <div className="h-dvh w-dvw bg-transparent" />;
-  }
-
-  return (
-    <div className="pet-drag-region h-dvh w-dvw overflow-hidden bg-transparent">
-      <div className="absolute right-0 top-0 flex items-start gap-3 bg-transparent p-2">
-        <div className="pet-drag-region relative mt-8 flex min-w-[250px] max-w-[320px] items-start rounded-[1.6rem] border border-white/76 bg-white/68 p-3.5 shadow-[0_18px_50px_rgba(41,53,66,0.16)] backdrop-blur-2xl">
-            <div className="min-w-0 pr-2">
-              <span className="pet-drag-handle block pb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#52758b]">桌面宠物提醒</span>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-600">{notice.body}</p>
-              <div className="pet-no-drag mt-3 flex gap-2">
-                <button className="pet-no-drag inline-flex min-h-7 items-center gap-1.5 rounded-xl bg-slate-700 px-2.5 text-[10px] font-semibold text-white" onClick={dismiss}>
-                <Check size={13} />
-                好的
-              </button>
-                <button className="pet-no-drag inline-flex min-h-7 items-center gap-1.5 rounded-xl bg-white px-2.5 text-[10px] font-semibold text-slate-500 shadow-[0_8px_18px_rgba(148,163,184,0.12)]" onClick={snooze}>
-                <Clock3 size={13} />
-                稍后（{snoozeMinutes}分钟）
-              </button>
-            </div>
-          </div>
-          <button
-            className="pet-no-drag grid size-7 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
-            onClick={dismiss}
-            aria-label="关闭提醒"
-          >
-            <X size={15} />
-          </button>
-        </div>
-        <div className="relative -ml-2">
-          <div className="absolute -right-2 top-14 h-8 w-8 rounded-full bg-white/55 blur-xl" />
-          <img
-            className="h-[164px] w-[164px] select-none object-contain drop-shadow-[0_30px_34px_rgba(15,23,42,0.28)] motion-safe:animate-[pet-breathe_4s_ease-in-out_infinite]"
-            src={notice.action?.gif || notice.action?.src || catCompanion}
-            alt={notice.action?.label || "提醒小猫"}
-            draggable="false"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function CatPose({ action }) {
   return (
     <div className="overflow-hidden rounded-[1rem] border border-white/80 bg-white/52 p-1 shadow-[0_10px_24px_rgba(148,163,184,0.08)] backdrop-blur-xl">
-      <div className={`aspect-square overflow-hidden rounded-[0.85rem] bg-gradient-to-br ${action.tint}`}>
+      <div className="aspect-square bg-transparent">
         {action.gif || action.src ? (
-          <img className="size-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(15,23,42,0.14)]" src={action.gif || action.src} alt={action.label} />
+          <SmoothPet className="size-full object-contain" src={action.gif || action.src} alt={action.label} />
         ) : (
           <div className="grid size-full place-items-center p-2 text-center text-[8px] leading-tight text-slate-400">
             <span>

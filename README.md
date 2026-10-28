@@ -1,33 +1,38 @@
 # 休息时刻
 
-一个 macOS 菜单栏桌面宠物提醒工具。用户可以设置休息提醒、上传最多 10 张宠物参考照，并通过本地免费生成引擎生成桌面小宠物素材。
+一个 macOS 菜单栏休息提醒 App，当前版本为 **0.1.7**。内置同一只猫咪的六个透明动作，可设置提醒时段、间隔和正文。
 
-## 当前能力
+## 当前行为
 
-- macOS 菜单栏入口：点击顶部图标打开小设置窗。
-- 提醒设置：提醒间隔、休息时长、提醒正文。
-- 桌面宠物提醒：透明置顶窗口、小猫 + 气泡，支持“已完成”和“稍后”。
-- 形象设置：上传最多 10 张参考照片。
-- 生成架构：启动时自动尝试拉起本地 ComfyUI / 自定义本地生成服务，不把 API key 暴露到前端。
+- 自动提醒、手动测试和“稍后”共用六动作轮换，重启后继续轮换。
+- 后台仅有一个待触发计时器；暂停会真正取消计时，恢复后重新排定。
+- “下一次提醒”显示后台真实时间；保存正文不会重置间隔，修改时段或间隔才重新排定。
+- “稍后（15分钟）”替换当前待触发时间，触发后恢复设置的正常间隔。
+- 遵守提醒时段，支持跨夜；休眠后最多补发一次，避免集中弹出。
+- 猫咪与卡片分为两个透明置顶窗口，可拖动任一窗口整体移动，垂直居中并限制在屏幕内。
+- 弹窗和猫咪保留90%尺寸；卡片右侧留白收紧，四角只有一层背景；猫咪按可见轮廓靠近卡片。
+- 播放完整原始帧，不叠加前后帧，不做光流混合；“趴下休息”使用修复后的12帧素材。
+- App 使用云朵 Logo；本地状态保存在 Electron 的 userData 目录，触发历史保留最近200条。
 
-## 本地运行
+手动测试不会改变自动提醒时间。“开始时间”与“结束时间”相同表示全天；结束时间不包含在提醒时段内。
+
+## 本地运行与验证
 
 ```bash
-npm install
+npm ci
+npm test
+npm run build
+npm run verify:build
 npm run dev
 ```
 
-打开：
-
-```text
-http://127.0.0.1:4173/
-```
-
-运行桌面开发版：
+网页预览地址为 `http://127.0.0.1:4173/`。后台计时、系统置顶和菜单栏入口由桌面端提供：
 
 ```bash
 npm run desktop:dev
 ```
+
+当前界面使用内置猫咪素材；仓库仍保留可选的图像服务桥接与开发文档，运行提醒功能不需要API Key。
 
 ## 打包 macOS App
 
@@ -35,55 +40,27 @@ npm run desktop:dev
 npm run desktop:build
 ```
 
-输出目录：
+输出位于 `release/`。打包会验证本地 ad-hoc 签名，并通过 macOS `ditto` 保留 framework 符号链接；不要将这些链接展开为重复目录。构建为本地签名，尚未完成 Apple 公证。
 
-```text
-release/
-```
+构建时生成的 `dist/pet-actions.json` 将六个动作映射到本次构建的资源文件名，避免重新构建后因哈希变化而找不到动作。
 
-## 本地免费生成引擎
-
-这个项目不会在前端假装生成猫咪动作。真正的流程是：
-
-```text
-10 张参考照
-→ GPT Image 2 综合 1-10 张照片生成同一只猫的 5 张全新视图
-→ GPT Image 2 基于五视图再次生成 6 个动作
-→ 输出透明 PNG
-→ App 保存并用于桌面提醒
-```
-
-默认会自动尝试连接并拉起本机 ComfyUI：
-
-```text
-http://127.0.0.1:8188
-```
-
-也可以自己提供一个本地 HTTP 生成服务：
+## 导出六个透明 GIF
 
 ```bash
-PET_GENERATION_ENDPOINT_URL=http://127.0.0.1:8787/generate npm run desktop:dev
+npm run export:gifs
+# 也可指定输出目录
+npm run export:gifs -- /path/to/output
 ```
 
-生成服务的输入/输出协议见：
-
-- [docs/local-generation-engine.md](./docs/local-generation-engine.md)
-- [docs/pet-generation-pipeline.md](./docs/pet-generation-pipeline.md)
-
-## 为什么不用固定云模型？
-
-为了方便公开到 GitHub，让更多人能自己跑，这里优先支持本地免费工作流。云端模型可以后续作为 Provider 插件接入，但不应该是默认依赖。
-
-推荐方向：
-
-- OpenAI GPT Image 2 `/v1/images/edits` 工作流
-- 第二阶段 GPT Image 2 动作工作流（只接收第一阶段生成的五视图）
-- IP-Adapter / Redux / LoRA 作为身份一致性辅助
-- rembg / RMBG 做透明背景输出
+默认输出到 `release/pet-gifs/`，包括挥手提醒、趴下休息、侧身看看、伸懒腰、安静陪伴、眨眼提示。
 
 ## 项目结构
 
-- [src/main.jsx](./src/main.jsx)：React 设置页、提醒预览、生成状态 UI。
-- [electron/main.cjs](./electron/main.cjs)：macOS 桌面壳、Tray、透明宠物窗口、本地生成服务桥接。
-- [electron/preload.cjs](./electron/preload.cjs)：安全暴露桌面端 API。
-- [docs/](./docs)：生成管线和本地引擎协议。
+- `src/main.jsx`：设置界面、素材预览。
+- `src/PetOverlay.jsx`：分离的提醒卡片和猫咪视图。
+- `src/SmoothPet.jsx`、`src/pet-animation.js`：透明原始帧播放和可见区域对齐。
+- `electron/main.cjs`：原生窗口、IPC、菜单栏和构建资源解析。
+- `electron/reminder-runtime.cjs`：动作轮换、计时、暂停、稍后、持久化和触发历史。
+- `assets/logo.png`、`assets/RestMoment.icns`：云朵图标源文件与macOS图标。
+- `tests/`：计时、动作轮换、窗口同步、透明帧清除和macOS归档回归验证。
+- `docs/`：可选的图像生成服务协议。

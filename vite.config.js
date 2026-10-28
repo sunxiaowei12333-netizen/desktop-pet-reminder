@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { generatePetAssetsWithImage2 } from "./scripts/image2-provider.mjs";
+import petActionManifest from "./scripts/pet-action-manifest.mjs";
 
 function image2LocalApi() {
   return {
@@ -47,5 +48,5 @@ export default defineConfig({
   // Electron production pages are loaded from file://, so renderer assets
   // must use relative URLs instead of root-relative /assets URLs.
   base: "./",
-  plugins: [react(), tailwindcss(), image2LocalApi()],
+  plugins: [react(), tailwindcss(), image2LocalApi(), petActionManifest()],
 });

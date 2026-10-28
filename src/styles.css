@@ -76,3 +76,51 @@ button {
   50% { transform: translateY(1px) scale(0.99) rotate(1deg); }
   75% { transform: translateY(-3px) scale(1.01) rotate(0deg); }
 }
+
+/* 2026-10-23: separate opaque-content native glass from the clear pet surface. */
+html.pet-window, body.pet-window, body.pet-window #root {
+  min-width: 0; width: 100%; height: 100%; min-height: 0;
+  background: transparent !important; overflow: hidden;
+}
+.smooth-pet { display:inline-grid; place-items:center; position:relative; flex-shrink:0; line-height:0; background:transparent; }
+.smooth-pet canvas, .smooth-pet-fallback { width:100%; height:100%; object-fit:contain; background:transparent; }
+.smooth-pet-fallback[hidden] {display:none;}
+.cat-stage { width:100vw; height:100vh; display:grid; place-items:center; background:transparent; }
+.desktop-cat { width:100%; height:100%; }
+.reminder-card { position:relative; width:100%; box-sizing:border-box; min-height:138px;
+  padding:18px 38px 18px 18px; border:1px solid rgba(255,255,255,.88);
+  border-radius:20px; background:rgba(250,252,254,.64);
+  -webkit-backdrop-filter:blur(56px) saturate(1.15); backdrop-filter:blur(56px) saturate(1.15);
+  color:#475569; }
+.reminder-content { min-width:0; }
+.reminder-heading { display:block; font-size:11px; font-weight:600; letter-spacing:.05em; color:#52758b; }
+.reminder-body { font-size:12px; line-height:1.65; margin:7px 0 14px; overflow-wrap:anywhere;
+  max-height:240px; overflow-y:auto; -webkit-app-region:no-drag; }
+.reminder-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.reminder-actions button { display:inline-flex; gap:5px; align-items:center; justify-content:center;
+  min-height:32px; padding:5px 10px; border:0; border-radius:11px; font-size:11px; font-weight:600; }
+.reminder-confirm { color:white; background:#334155; }
+.reminder-later { color:#64748b; background:rgba(255,255,255,.88); }
+.reminder-actions button:hover { filter:brightness(.95); }
+.reminder-close { position:absolute; top:12px; right:9px; display:grid; place-items:center; width:27px; height:27px;
+  border:0; border-radius:9px; background:transparent; color:#94a3b8; }
+.reminder-close:hover {background:#e2e8f0; color:#334155;}
+.reminder-surface {border-radius:20px;}
+@media (prefers-reduced-transparency: reduce) { .reminder-card {background:#f8fafc;} }
+
+/* 2026-10-28: scale the reminder content with its 90% native window.
+   CSS zoom keeps text, controls, drag regions and measured height together. */
+.reminder-card { zoom: .9; width: calc(100% / .9); }
+.reminder-surface { border-radius: 18px; }
+
+/* One painted card surface; transparent native window corners stay clear. */
+.reminder-card {
+  background: rgba(248,250,252,.96);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.reminder-surface { border-radius: 0; }
+
+/* Compact content padding; reserve the close button only in the heading. */
+.reminder-card { padding:18px; }
+.reminder-heading { padding-right:28px; }
+.reminder-body { margin-top:10px; }

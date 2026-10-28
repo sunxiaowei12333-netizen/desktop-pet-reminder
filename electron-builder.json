@@ -16,7 +16,9 @@
       "dmg"
     ],
     "hardenedRuntime": false,
-    "gatekeeperAssess": false
+    "gatekeeperAssess": false,
+    "icon": "assets/RestMoment.icns",
+    "identity": "-"
   },
   "dmg": {
     "artifactName": "休息时刻-${version}-${arch}.${ext}"

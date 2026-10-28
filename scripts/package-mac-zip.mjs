@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
@@ -7,8 +7,6 @@ const pkg = JSON.parse(readFileSync("package.json", "utf8"));
 const builder = JSON.parse(readFileSync("electron-builder.json", "utf8"));
 const productName = builder.productName || pkg.productName;
 const zipPath = `release/${productName}-${pkg.version}-mac.zip`;
-const flatRoot = "release/mac-flat";
-const flatAppPath = `${flatRoot}/${productName}.app`;
 const builderOutput = "release/package-build";
 
 function findPackagedApp(root) {
@@ -46,13 +44,11 @@ await run("npx", [
 ]);
 const appPath = findPackagedApp(builderOutput);
 if (!appPath) throw new Error(`未在 ${builderOutput} 中找到 ${productName}.app`);
-// Finder/Archive Utility can materialize framework symlinks as empty folders
-// when extracting a ZIP. Dereference them before archiving so the downloaded
-// app remains self-contained and can always find libffmpeg.dylib.
-rmSync(flatRoot, { recursive: true, force: true });
-mkdirSync(flatRoot, { recursive: true });
-await run("rsync", ["-aL", `${appPath}/`, `${flatAppPath}/`]);
+// Framework links are part of the macOS bundle format. Preserve them in the
+// archive and validate the final signature before distributing the ZIP.
+await run("codesign", ["--force", "--deep", "--sign", "-", appPath]);
+await run("codesign", ["--verify", "--deep", "--strict", appPath]);
 rmSync(zipPath, { force: true });
-await run("zip", ["-qry", `../${productName}-${pkg.version}-mac.zip`, `${productName}.app`], { cwd: flatRoot });
+await run("ditto", ["-c", "-k", "--sequesterRsrc", "--keepParent", appPath, zipPath]);
 
 console.log(`Packaged ${zipPath}`);
