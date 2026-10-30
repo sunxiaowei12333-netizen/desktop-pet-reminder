@@ -20,7 +20,8 @@
     "build:icon": "node scripts/build-macos-icon.mjs",
     "build:pet-assets": "python3 scripts/build-nailao-gifs.py",
     "build:pet-motion": "python3 scripts/build-pet-motion.py",
-    "export:smooth": "python3 scripts/export-smooth-pet.py"
+    "export:smooth": "python3 scripts/export-smooth-pet.py",
+    "verify:animation": "node scripts/verify-animation-continuity.mjs"
   },
   "dependencies": {
     "@icons-pack/react-simple-icons": "^13.13.0",
