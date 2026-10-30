@@ -1,0 +1,521 @@
+{
+  "createdAt": "2026-10-30T12:56:37.989Z",
+  "method": "production fixed-texture WebGL renderer, 288 phases per action + 3 real-time loops of six production players",
+  "actions": {
+    "wave": {
+      "samples": 288,
+      "durationMs": 4800,
+      "sizeVariation": 0.007247883486305451,
+      "groundDriftPx": 0,
+      "minBounds": [
+        118,
+        54,
+        122,
+        36
+      ],
+      "greenPixels": 0,
+      "minJacobian": 0.6752386711887084,
+      "maxJacobian": 1.4315825285448227,
+      "maxDisplacementPx": 14.4503711611964,
+      "loopPixels": {
+        "mean": 0,
+        "highFraction": 0,
+        "max": 0
+      },
+      "maxTinyMean": 0.00510204081632653,
+      "maxTinyFraction": 3.985969387755102e-05,
+      "maxFrameDelta": 0.3097297512755102,
+      "p95FrameDelta": 0.13095902423469388,
+      "textureUploads": 1,
+      "sourceTextures": 1
+    },
+    "rest": {
+      "samples": 288,
+      "durationMs": 4800,
+      "sizeVariation": 0.0008710381520782295,
+      "groundDriftPx": 0,
+      "minBounds": [
+        50,
+        166,
+        48,
+        36
+      ],
+      "greenPixels": 0,
+      "minJacobian": 0.058422088623046875,
+      "maxJacobian": 2.0162506103515625,
+      "maxDisplacementPx": 10.21661376953125,
+      "loopPixels": {
+        "mean": 0,
+        "highFraction": 0,
+        "max": 0
+      },
+      "maxTinyMean": 0.00253109056122449,
+      "maxTinyFraction": 1.992984693877551e-05,
+      "maxFrameDelta": 0.11274314413265306,
+      "p95FrameDelta": 0.05586336096938776,
+      "textureUploads": 1,
+      "sourceTextures": 1
+    },
+    "look": {
+      "samples": 288,
+      "durationMs": 4800,
+      "sizeVariation": 0.015319912497942179,
+      "groundDriftPx": 0,
+      "minBounds": [
+        120,
+        54,
+        112,
+        36
+      ],
+      "greenPixels": 0,
+      "minJacobian": 0.8092659115500282,
+      "maxJacobian": 1.2193149674349115,
+      "maxDisplacementPx": 11.741605832241868,
+      "loopPixels": {
+        "mean": 0,
+        "highFraction": 0,
+        "max": 0
+      },
+      "maxTinyMean": 0.005321269132653061,
+      "maxTinyFraction": 5.978954081632653e-05,
+      "maxFrameDelta": 0.30953045280612246,
+      "p95FrameDelta": 0.24970105229591838,
+      "textureUploads": 1,
+      "sourceTextures": 1
+    },
+    "stretch": {
+      "samples": 288,
+      "durationMs": 4800,
+      "sizeVariation": 0.006327460764136372,
+      "groundDriftPx": 0,
+      "minBounds": [
+        70,
+        104,
+        70,
+        36
+      ],
+      "greenPixels": 0,
+      "minJacobian": 0.8698496636352502,
+      "maxJacobian": 1.1153589497553185,
+      "maxDisplacementPx": 6.7008211919117375,
+      "loopPixels": {
+        "mean": 0,
+        "highFraction": 0,
+        "max": 0
+      },
+      "maxTinyMean": 0.006975446428571429,
+      "maxTinyFraction": 5.978954081632653e-05,
+      "maxFrameDelta": 0.25063775510204084,
+      "p95FrameDelta": 0.19632892219387754,
+      "textureUploads": 1,
+      "sourceTextures": 1
+    },
+    "companion": {
+      "samples": 288,
+      "durationMs": 4800,
+      "sizeVariation": 0.0020940343019459906,
+      "groundDriftPx": 0,
+      "minBounds": [
+        96,
+        60,
+        96,
+        36
+      ],
+      "greenPixels": 0,
+      "minJacobian": 0.8835857142585155,
+      "maxJacobian": 1.1171275563265226,
+      "maxDisplacementPx": 7.909182795986671,
+      "loopPixels": {
+        "mean": 0,
+        "highFraction": 0,
+        "max": 0
+      },
+      "maxTinyMean": 0.005978954081632653,
+      "maxTinyFraction": 5.978954081632653e-05,
+      "maxFrameDelta": 0.4116908482142857,
+      "p95FrameDelta": 0.17606026785714285,
+      "textureUploads": 1,
+      "sourceTextures": 1
+    },
+    "blink": {
+      "samples": 288,
+      "durationMs": 4800,
+      "sizeVariation": 0.00032654839228940524,
+      "groundDriftPx": 0,
+      "minBounds": [
+        82,
+        48,
+        84,
+        36
+      ],
+      "greenPixels": 0,
+      "minJacobian": 0.0596466064453125,
+      "maxJacobian": 2.015514373779297,
+      "maxDisplacementPx": 8.283775329589844,
+      "loopPixels": {
+        "mean": 0,
+        "highFraction": 0,
+        "max": 0
+      },
+      "maxTinyMean": 0.00025908801020408165,
+      "maxTinyFraction": 0,
+      "maxFrameDelta": 0.10534917091836735,
+      "p95FrameDelta": 0.08231026785714286,
+      "textureUploads": 1,
+      "sourceTextures": 1
+    }
+  },
+  "playback": {
+    "loops": 3,
+    "fps": 60.00235847420592,
+    "p95Ms": 16.700000000000728,
+    "maxMs": 16.80000000000291,
+    "over25Ms": 0,
+    "ready": [
+      {
+        "frameCount": 1,
+        "duration": 4800,
+        "renderer": "webgl-fixed-texture-rig"
+      },
+      {
+        "frameCount": 1,
+        "duration": 4800,
+        "renderer": "webgl-fixed-texture-rig"
+      },
+      {
+        "frameCount": 1,
+        "duration": 4800,
+        "renderer": "webgl-fixed-texture-rig"
+      },
+      {
+        "frameCount": 1,
+        "duration": 4800,
+        "renderer": "webgl-fixed-texture-rig"
+      },
+      {
+        "frameCount": 1,
+        "duration": 4800,
+        "renderer": "webgl-fixed-texture-rig"
+      },
+      {
+        "frameCount": 1,
+        "duration": 4800,
+        "renderer": "webgl-fixed-texture-rig"
+      }
+    ],
+    "stats": [
+      {
+        "renderedFrames": 880,
+        "elapsed": 14632.768,
+        "renderer": "webgl-fixed-texture-rig",
+        "textureUploads": 1,
+        "sourceTextures": 1
+      },
+      {
+        "renderedFrames": 880,
+        "elapsed": 14632.768,
+        "renderer": "webgl-fixed-texture-rig",
+        "textureUploads": 1,
+        "sourceTextures": 1
+      },
+      {
+        "renderedFrames": 880,
+        "elapsed": 14632.768,
+        "renderer": "webgl-fixed-texture-rig",
+        "textureUploads": 1,
+        "sourceTextures": 1
+      },
+      {
+        "renderedFrames": 880,
+        "elapsed": 14632.768,
+        "renderer": "webgl-fixed-texture-rig",
+        "textureUploads": 1,
+        "sourceTextures": 1
+      },
+      {
+        "renderedFrames": 880,
+        "elapsed": 14632.768,
+        "renderer": "webgl-fixed-texture-rig",
+        "textureUploads": 1,
+        "sourceTextures": 1
+      },
+      {
+        "renderedFrames": 880,
+        "elapsed": 14632.768,
+        "renderer": "webgl-fixed-texture-rig",
+        "textureUploads": 1,
+        "sourceTextures": 1
+      }
+    ],
+    "destroyStopsFrames": true,
+    "fallbackReady": {
+      "frameCount": 120,
+      "duration": 4800,
+      "renderer": "canvas-source-frames"
+    }
+  },
+  "errors": [],
+  "checks": [
+    {
+      "name": "wave: size <2%",
+      "pass": true
+    },
+    {
+      "name": "wave: fixed ground <=2px",
+      "pass": true
+    },
+    {
+      "name": "wave: 24px safety",
+      "pass": true
+    },
+    {
+      "name": "wave: no green spill",
+      "pass": true
+    },
+    {
+      "name": "wave: mesh never folds",
+      "pass": true
+    },
+    {
+      "name": "wave: actual motion",
+      "pass": true
+    },
+    {
+      "name": "wave: one immutable texture",
+      "pass": true
+    },
+    {
+      "name": "wave: exact looping pose",
+      "pass": true
+    },
+    {
+      "name": "wave: no texture discontinuity",
+      "pass": true
+    },
+    {
+      "name": "wave: no adjacent-frame pop",
+      "pass": true
+    },
+    {
+      "name": "rest: size <2%",
+      "pass": true
+    },
+    {
+      "name": "rest: fixed ground <=2px",
+      "pass": true
+    },
+    {
+      "name": "rest: 24px safety",
+      "pass": true
+    },
+    {
+      "name": "rest: no green spill",
+      "pass": true
+    },
+    {
+      "name": "rest: mesh never folds",
+      "pass": true
+    },
+    {
+      "name": "rest: actual motion",
+      "pass": true
+    },
+    {
+      "name": "rest: one immutable texture",
+      "pass": true
+    },
+    {
+      "name": "rest: exact looping pose",
+      "pass": true
+    },
+    {
+      "name": "rest: no texture discontinuity",
+      "pass": true
+    },
+    {
+      "name": "rest: no adjacent-frame pop",
+      "pass": true
+    },
+    {
+      "name": "look: size <2%",
+      "pass": true
+    },
+    {
+      "name": "look: fixed ground <=2px",
+      "pass": true
+    },
+    {
+      "name": "look: 24px safety",
+      "pass": true
+    },
+    {
+      "name": "look: no green spill",
+      "pass": true
+    },
+    {
+      "name": "look: mesh never folds",
+      "pass": true
+    },
+    {
+      "name": "look: actual motion",
+      "pass": true
+    },
+    {
+      "name": "look: one immutable texture",
+      "pass": true
+    },
+    {
+      "name": "look: exact looping pose",
+      "pass": true
+    },
+    {
+      "name": "look: no texture discontinuity",
+      "pass": true
+    },
+    {
+      "name": "look: no adjacent-frame pop",
+      "pass": true
+    },
+    {
+      "name": "stretch: size <2%",
+      "pass": true
+    },
+    {
+      "name": "stretch: fixed ground <=2px",
+      "pass": true
+    },
+    {
+      "name": "stretch: 24px safety",
+      "pass": true
+    },
+    {
+      "name": "stretch: no green spill",
+      "pass": true
+    },
+    {
+      "name": "stretch: mesh never folds",
+      "pass": true
+    },
+    {
+      "name": "stretch: actual motion",
+      "pass": true
+    },
+    {
+      "name": "stretch: one immutable texture",
+      "pass": true
+    },
+    {
+      "name": "stretch: exact looping pose",
+      "pass": true
+    },
+    {
+      "name": "stretch: no texture discontinuity",
+      "pass": true
+    },
+    {
+      "name": "stretch: no adjacent-frame pop",
+      "pass": true
+    },
+    {
+      "name": "companion: size <2%",
+      "pass": true
+    },
+    {
+      "name": "companion: fixed ground <=2px",
+      "pass": true
+    },
+    {
+      "name": "companion: 24px safety",
+      "pass": true
+    },
+    {
+      "name": "companion: no green spill",
+      "pass": true
+    },
+    {
+      "name": "companion: mesh never folds",
+      "pass": true
+    },
+    {
+      "name": "companion: actual motion",
+      "pass": true
+    },
+    {
+      "name": "companion: one immutable texture",
+      "pass": true
+    },
+    {
+      "name": "companion: exact looping pose",
+      "pass": true
+    },
+    {
+      "name": "companion: no texture discontinuity",
+      "pass": true
+    },
+    {
+      "name": "companion: no adjacent-frame pop",
+      "pass": true
+    },
+    {
+      "name": "blink: size <2%",
+      "pass": true
+    },
+    {
+      "name": "blink: fixed ground <=2px",
+      "pass": true
+    },
+    {
+      "name": "blink: 24px safety",
+      "pass": true
+    },
+    {
+      "name": "blink: no green spill",
+      "pass": true
+    },
+    {
+      "name": "blink: mesh never folds",
+      "pass": true
+    },
+    {
+      "name": "blink: actual motion",
+      "pass": true
+    },
+    {
+      "name": "blink: one immutable texture",
+      "pass": true
+    },
+    {
+      "name": "blink: exact looping pose",
+      "pass": true
+    },
+    {
+      "name": "blink: no texture discontinuity",
+      "pass": true
+    },
+    {
+      "name": "blink: no adjacent-frame pop",
+      "pass": true
+    },
+    {
+      "name": "six players run smoothly",
+      "pass": true
+    },
+    {
+      "name": "cleanup stops rendering",
+      "pass": true
+    },
+    {
+      "name": "six production rig players",
+      "pass": true
+    },
+    {
+      "name": "animated fallback matches duration",
+      "pass": true
+    },
+    {
+      "name": "no browser errors",
+      "pass": true
+    }
+  ],
+  "pass": true
+}

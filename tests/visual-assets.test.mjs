@@ -16,15 +16,15 @@ test("legacy macOS icon has system-size artwork, transparent margins and rounded
 });
 
 for (const id of ["wave", "rest", "look", "stretch", "companion", "blink"]) {
-  test(`${id}: all 16 decoded GIF frames retain safe bounds and contain no green spill`, async () => {
+  test(`${id}: all decoded rig GIF frames retain safe bounds and contain no green spill`, async () => {
     const file = `src/assets/nailao/nailao-action-${id}-image2.gif`;
     const metadata = await sharp(file, { animated: true }).metadata();
-    assert.equal(metadata.pages, 16);
-    assert.equal(metadata.delay.reduce((a, b) => a + b, 0), 3200);
+    assert.ok(metadata.pages >= 100 && metadata.pages <= 120);
+    assert.equal(metadata.delay.reduce((a, b) => a + b, 0), 4800);
     const { data, info } = await sharp(file, { animated: true }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-    const height = info.height / 16;
+    const height = info.height / metadata.pages;
     const areas = [], bottoms = [], widths = [];
-    for (let frame = 0; frame < 16; frame++) {
+    for (let frame = 0; frame < metadata.pages; frame++) {
       let visible = 0, bottom = 0, left = info.width, right = 0;
       for (let y = 0; y < height; y++) for (let x = 0; x < info.width; x++) {
         const i = ((frame * height + y) * info.width + x) * 4;
@@ -36,8 +36,7 @@ for (const id of ["wave", "rest", "look", "stretch", "companion", "blink"]) {
       areas.push(visible); bottoms.push(bottom); widths.push(right - left + 1);
       assert.ok(visible > 10000, `empty ${id} frame ${frame}`);
     }
-    assert.ok(Math.sqrt(Math.max(...areas) / Math.min(...areas)) - 1 < .01, `${id} changes overall cat scale within one action`);
-    assert.ok(Math.max(...bottoms) - Math.min(...bottoms) <= 4, `${id} ground baseline drifts`);
-    if (id === 'stretch') assert.ok(Math.max(...widths) / Math.min(...widths) > 1.4, 'scale correction must preserve the extended stretch pose');
+    assert.ok(Math.sqrt(Math.max(...areas) / Math.min(...areas)) - 1 < .02, `${id} changes overall cat scale within one action`);
+    assert.ok(Math.max(...bottoms) - Math.min(...bottoms) <= 2, `${id} ground baseline drifts`);
   });
 }

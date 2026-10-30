@@ -1,8 +1,8 @@
 # 休息时刻
 
-一个 macOS 菜单栏休息提醒 App，当前版本为 **0.1.13**。内置同一只猫咪的六个透明动作，可设置提醒时段、间隔和正文。
+一个 macOS 菜单栏休息提醒 App，当前版本为 **0.1.14**。内置同一只猫咪的六个透明动作，可设置提醒时段、间隔和正文。
 
-**当前视觉质量状态：0.1.13 未通过六动作联合验收。** 大小和播放帧率已改善，但仍有纹理突跳；伸懒腰存在局部轮廓撕裂。此前通过的单项检查不能视为整体修复完成。详见 [完整检查结果](docs/animation-review-20261030.md)。
+0.1.14将六动作改为固定贴图与受控网格动画。联合检查覆盖每个动作完整循环的288个时刻、循环接缝、纹理连续性、网格折叠、尺寸、透明边缘及六播放器并行性能。详见 [本版检查记录](docs/fixed-rig-review-20261030.md)；[0.1.13未通过的历史检查](docs/animation-review-20261030.md)保留用于追踪原因。
 
 ## 当前行为
 
@@ -13,9 +13,10 @@
 - 遵守提醒时段，支持跨夜；休眠后最多补发一次，避免集中弹出。
 - 猫咪与卡片分为两个透明置顶窗口，可拖动任一窗口整体移动，垂直居中并限制在屏幕内。
 - 卡片234px宽、四角统一为14px CSS圆角（随90%内容缩放）；背景与窗口等宽，避免右侧圆角被裁切。猫咪窗口183×199px，与卡片间隔13px，按可见轮廓对齐。
-- 六个动作各有16张透明关键姿态，完整循环3.2秒。App使用预计算的双向位移图，在显示刷新率下连续补间；轮廓和透明度取自单一姿态，身体内部在双向位移对齐且边缘匹配的区域连续过渡毛色与纹理；爪子遮住胸口、眨眼和尾巴等遮挡区域保留单一姿态细节，修复过渡中点突然换图导致的闪动；位移场经过平滑，减少细毛局部扭动。最后一帧到第一帧也有过渡；GPU不可用时回退到原始姿态播放。
-- 位移计算在素材构建时完成，播放时只上传小纹理；隐藏或离屏暂停播放，画布尺寸由ResizeObserver维护，避免逐帧读取布局。
-- 素材从真实 Alpha 帧图提取完整主体，不用绿幕抠图；六动作共用同一构建规则，保留至少24px透明安全边距，每个动作使用固定全局调色板。
+- 六个动作每轮4.8秒，每个动作只使用一张固定透明猫咪贴图。眯眼、挥爪、歪头、侧头和伸展由连续网格控制，毛纹随同一块表面移动，不切换生成姿态、不混合两只爪子，也不对整只猫逐帧缩放。
+- 动作是小幅度的二维活动：挥爪从已举起的前爪开始，伸展从伸展姿态开始；不包含站起、趴下或大幅三维转身。
+- App随显示器刷新率连续绘制；隐藏或离屏暂停。无WebGL时播放同一套动作导出的GIF。
+- GIF从生产渲染器以25fps取样，4.8秒/120个时间点；相同静止帧可能合并，时长不变。固定调色板、关闭抖色、每帧清除，避免GIF自身产生杂点和拖影。
 - App 使用云朵 Logo；macOS 15 的传统 ICNS 已包含连续圆角与透明留白，1024px画布内可见主体为824px。本地状态保存在 Electron 的 userData 目录，触发历史保留最近200条。
 
 手动测试不会改变自动提醒时间。“开始时间”与“结束时间”相同表示全天；结束时间不包含在提醒时段内。
@@ -27,84 +28,55 @@ npm ci
 npm test
 npm run build
 npm run verify:build
+npm run verify:animation
 npm run dev
 ```
 
-网页预览地址为 `http://127.0.0.1:4173/`。后台计时、系统置顶和菜单栏入口由桌面端提供：
+网页预览为 `http://127.0.0.1:4173/`；桌面窗口、菜单栏和提醒计时用 `npm run desktop:dev`。
+
+联合检查需要Playwright和Chrome，可用 `PLAYWRIGHT_MODULE`、`CHROME_PATH` 指定路径，`RIG_OUTPUT` 指定报告目录。输出 `joint-audit.json` 和六张完整循环对照图。自动检查不能替代完整动作的视觉审查，尤其是动作自然度；合格报告必须与实际版本对应。
+
+## 导出与重建动作
 
 ```bash
-npm run desktop:dev
-```
-
-当前界面使用内置猫咪素材；仓库仍保留可选的图像服务桥接与开发文档，运行提醒功能不需要API Key。
-
-## 打包 macOS App
-
-```bash
-npm run desktop:build
-```
-
-输出位于 `release/`。打包会验证本地 ad-hoc 签名，并通过 macOS `ditto` 保留 framework 符号链接；不要将这些链接展开为重复目录。构建为本地签名，尚未完成 Apple 公证。
-
-构建时生成的 `dist/pet-actions.json` 将六个动作映射到本次构建的资源文件名，避免重新构建后因哈希变化而找不到动作。
-
-## 导出六个透明 GIF
-
-```bash
-npm run export:gifs
-# 也可指定输出目录
 npm run export:gifs -- /path/to/output
 ```
 
-默认输出到 `release/pet-gifs/`，包括挥手提醒、趴下休息、侧身看看、伸懒腰、安静陪伴、眨眼提示。
+直接复制内置六个透明GIF，它们与App使用同一套固定贴图和动作曲线；GIF为25fps且只有256色，App为连续刷新率、完整颜色。白底MP4更适合发布。
 
-上面的命令直接复制16姿态源GIF。要导出与App连续动作相同规则的流畅版，运行：
-
-```bash
-npm run export:smooth -- /path/to/output
-# macOS可同时导出1080方形白底视频，每个动作循环三遍
-npm run export:smooth -- /path/to/output --video
-```
-
-流畅版GIF为25fps、80帧、3.2秒；App随显示器刷新率补间（六动作并行浏览器验证约60fps）。两者取样帧率不同，因此流畅版GIF不再是内置关键姿态文件的字节复制。
-
-## 维护素材与图标
-
-原始透明帧图保存在 `assets/pet-motion-v2/`。构建时按 Alpha 连通主体提取16只猫，避免生成帧越过网格边界时被固定切格误裁；发现主体触及整张帧图外缘会报错，必须修复源图。
+修改 `src/pet-rig.js` 后，用同一生产渲染器重新导出：
 
 ```bash
+RIG_OUTPUT=/path/to/review npm run build:pet-rig
 python3 -m pip install -r scripts/requirements-assets.txt
-npm run build:pet-assets
-npm run build:pet-motion
-npm run build:icon # macOS，使用系统 iconutil
+python3 scripts/export-pet-rig.py /path/to/review/frames /path/to/output --update-assets
 npm test
+npm run build
+npm run verify:build
+RIG_OUTPUT=/path/to/review npm run verify:animation
 ```
 
-`assets/pet-motion-v2/validation.json` 记录帧数、循环时长、逐帧边界、绿色杂色检查和最终 GIF 的 SHA-256。自动检查不代替动作连贯性与完整解剖轮廓的人工视觉检查。
+第一次导出时，如果旧GIF与新动作周期不一致，联合检查会在写完帧图后对回退项报错；完成编码后必须重新运行全部检查。导出脚本会回读所有GIF时间点，对照渲染帧验证透明轮廓完全一致，并检查调色板误差。MP4编码使用macOS AVFoundation。
 
-`src/assets/nailao/motion-manifest.json` 将位移图与对应GIF的SHA-256关联；修改GIF后必须重建位移图，测试会阻止两者版本不一致。位移图包含16组正反向数据及循环接缝，不在App运行时执行光流计算。
+`src/assets/nailao/rig/manifest.json` 记录固定贴图与GIF的SHA-256、原始姿态来源、周期与导出帧率。不要重新从导出的GIF提取固定贴图。
+
+## 打包与图标
+
+```bash
+npm run build:icon
+npm run desktop:build
+```
+
+输出在 `release/`。macOS打包使用 `ditto` 保留framework符号链接，并验证本地ad-hoc签名；尚未完成Apple公证。
+构建生成 `dist/pet-actions.json` 和 `dist/pet-rig.json`，分别映射GIF与固定贴图，测试核对源文件哈希。
 
 ## 项目结构
 
-- `src/main.jsx`：设置界面、素材预览。
-- `src/PetOverlay.jsx`：分离的提醒卡片和猫咪视图。
-- `src/SmoothPet.jsx`、`src/pet-animation.js`：透明原始帧播放和可见区域对齐。
-- `src/pet-motion-renderer.js`：GPU运动补间及连续材质过渡，保留单一轮廓以避免透明重影。
-- `electron/main.cjs`：原生窗口、IPC、菜单栏和构建资源解析。
-- `electron/reminder-runtime.cjs`：动作轮换、计时、暂停、稍后、持久化和触发历史。
-- `assets/logo.png`、`assets/RestMoment.png`、`assets/RestMoment.icns`：云朵原图、带透明留白的图标与macOS图标。
-- `assets/pet-motion-v2/`：六个重制动作的透明帧图与构建验证记录。
-- `tests/`：计时、动作轮换、窗口同步、透明帧清除和macOS归档回归验证。
-- `docs/`：可选的图像生成服务协议。
+- `src/SmoothPet.jsx`、`src/pet-animation.js`：生命周期、可见区域对齐和自定义GIF回退。
+- `src/pet-rig.js`、`src/pet-rig-renderer.js`：固定材质网格、动作曲线与单纹理WebGL绘制。
+- `src/assets/nailao/rig/`：六张固定透明贴图与来源清单。
+- `scripts/verify-pet-rig.cjs`、`scripts/export-pet-rig.py`：联合检查与同源导出。
+- `electron/main.cjs`、`electron/reminder-runtime.cjs`：窗口、提醒计时、动作轮换与持久化。
+- `assets/RestMoment.png`、`assets/RestMoment.icns`：云朵图标及macOS尺寸/圆角。
 
-### 纹理闪动回归检查
-
-`python3 scripts/test-pet-motion-confidence.py` 检查遮挡图生成，再用 `node scripts/verify-pet-renderer.cjs` 用 Playwright/Chrome 检查六个动作的96个过渡中点、循环接缝、单轮廓透明度、不透明躯干内部移动爪印无重影、无绿色像素与并行播放性能。需要本机 Playwright（可通过 `PLAYWRIGHT_MODULE` 指定模块路径），Chrome 路径可用 `CHROME_PATH` 设置。报告和预览写入系统临时目录。该检查度量过渡时的纹理突变，不代表原始生成姿态的毛纹完全一致。
-
-位移图的 B 通道保存内轮廓/遮挡置信度，依据模糊后的颜色差、结构边缘差与 Alpha 遮挡生成。身体不透明并不代表两张图对应同一部位：低置信度区域禁止混合细节。遮挡部位保留单一源姿态，其显露/遮住时仍可能有关键姿态变化；不能用单纯的过渡中点色差指标替代虚影检查。
-
-### 同一动作的尺寸稳定
-
-生成帧图中的猫可能忽大忽小。构建 GIF 时按主体可见面积对每帧做等比例缩放，统一落地基线，再重建位移图及遮挡保护。不会单独拉宽/压扁猫，也不会将伸展姿态强制套进相同宽高框。尺寸回归检查同时覆盖16张关键姿态和完整播放循环；尺度指标为可见面积平方根，不能解释为耳朵、尾巴和四肢的外接框完全不变。
-
-发布动画改动前运行 `npm run verify:animation`（Playwright/Chrome 环境与 `verify-pet-renderer.cjs` 相同）。当前0.1.13资产会返回失败，这是已知问题的回归保护，不应降低阈值使其通过。通过后仍需完整观看六个真实动作及循环接缝，检查身体内部的重影与透明缺口。
+旧 `pet-motion-*` 源码、位移图、`assets/pet-motion-v2` 和 `legacy:*` 命令仅保留作历史参考，当前App不打包、不调用光流渲染器。旧生成流程会覆盖当前GIF，请勿用于本版构建。

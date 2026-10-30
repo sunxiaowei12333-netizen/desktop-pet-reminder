@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPetAnimation } from "./pet-animation.js";
-import { motionAssetFor } from "./pet-motion-assets.js";
+import { rigAssetFor } from "./pet-rig-assets.js";
 
 export default function SmoothPet({ src, alt, className = "" }) {
   const canvas = useRef(null);
@@ -10,7 +10,7 @@ export default function SmoothPet({ src, alt, className = "" }) {
     setReady(false);
     const player = createPetAnimation(canvas.current, {
       src,
-      motion: motionAssetFor(src),
+      motion: rigAssetFor(src),
       alignment: /\bdesktop-cat\b/.test(className) ? "left" : "center",
     });
     player.ready.then(() => { if (active) setReady(true); }).catch(error => {

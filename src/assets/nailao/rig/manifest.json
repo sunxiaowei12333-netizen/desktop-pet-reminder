@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "durationMs": 4800,
+  "exportFps": 25,
+  "source": "One immutable PNG per action extracted before rig animation; no generated in-between textures.",
+  "actions": {
+    "wave": {
+      "textureSha256": "d58ad3638115141c4335fffc1478fc301458732ff17b042861811c90e296516a",
+      "originalPoseIndex": 5,
+      "originalGifSha256": "fa8048e37a6651cb8df94c7e020586c4fc5752b161fc452c162d0b11759fa23f",
+      "gifSha256": "bc31dc31c76c67264f9bcc67b1864fc1984836d861c4832e13fc00cd106e1343"
+    },
+    "rest": {
+      "textureSha256": "5f65ed1e3db624262d06a7d49cd14c1c7661e758a138ab8b158c19d7ff53ffc2",
+      "originalPoseIndex": 0,
+      "originalGifSha256": "dda6179ae202185b89d0f5b60b4c63221f20630c739e7d17e6153faf712944de",
+      "gifSha256": "7de868a9592d6ad7211d1ed575035624968f10e8d86171091bb01600fad22ed5"
+    },
+    "look": {
+      "textureSha256": "924744c5240064187b6f6bc50bc82a5e39665cb2ab696eb96a48636a29d129c3",
+      "originalPoseIndex": 4,
+      "originalGifSha256": "9342f763e4c5a0ad9e5e5fb51797e7cd3a17379c1be8eb60da318be737c1a5c4",
+      "gifSha256": "8e81f1c8c5b875f422c891610fe765650434c1960c6d04ed82d7948ead878b24"
+    },
+    "stretch": {
+      "textureSha256": "6489a160f836b2868dc948e166dcf61319e66944598549740cb2fe38d252d4a9",
+      "originalPoseIndex": 7,
+      "originalGifSha256": "c379962c9625327aea7895de9d09caa388b88441419c10dc4f303189e7f2dc50",
+      "gifSha256": "08a7ac5c06f8993882a0b02ab22cf38054749b4cf22384e8ffd4a483869a3591"
+    },
+    "companion": {
+      "textureSha256": "615e804ca16bb763d371401fbbb6f9e092414fe735f2a68d3d3cf0fd85185483",
+      "originalPoseIndex": 0,
+      "originalGifSha256": "f73ba4a89ee16a7890ea0e434755a34f82f65d18354031443512f5f07097c1f1",
+      "gifSha256": "b3d2bb7567e9f95f2e353f23ac37275e1d2bfcf292fec08a7549dbd35d135e2e"
+    },
+    "blink": {
+      "textureSha256": "a992317d58b5100ec859c7a103d3634469f17c7901bb0a71b35e1c8636194b83",
+      "originalPoseIndex": 0,
+      "originalGifSha256": "6ce875057fface9bedeec97ea1f7611411894f85369cc9fab43a8fc6930de581",
+      "gifSha256": "10b3f6336ed2b74209e792311be8e54f007047e06d6f7ef5b6d44ce5e569fdd7"
+    }
+  }
+}

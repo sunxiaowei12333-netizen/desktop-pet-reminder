@@ -653,9 +653,9 @@ function App() {
                   </div>
 
                   <section className="space-y-2.5">
-                    <SectionHead number="04" title="6 个动作 GIF" description="根据参考视图生成 6 个连续序列帧动画。" />
+                    <SectionHead number="04" title="6 个动作 GIF" description="挥爪、眯眼、侧头、伸展、歪头和眨眼。" />
                     <div className="mb-2 rounded-[1.25rem] border border-sky-100/80 bg-sky-50/45 px-3 py-2.5 text-[10px] leading-relaxed text-slate-500">
-                      每个 GIF 都由连续动作帧组成，循环播放约 3 秒，背景是真正透明。
+                      每个动作约 5 秒，轻轻活动后回到起点，背景保持透明。
                     </div>
                     <div className="grid grid-cols-3 gap-2.5">
                       {previewVariants.map((action) => (
