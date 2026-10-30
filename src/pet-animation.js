@@ -212,7 +212,7 @@ export function createPetAnimation(canvas, { src, sheet, motion, padding = .05, 
         destroy() { context.clearRect(0, 0, canvas.width, canvas.height); }
       };
     }
-    canvas.dataset.petMotion = asset.motion && renderer.kind.startsWith('webgl') ? 'stable-material-compensated' : 'source-frames';
+    canvas.dataset.petMotion = asset.motion && renderer.kind.startsWith('webgl') ? 'occlusion-protected-compensated' : 'source-frames';
     canvas.dataset.petRenderer = renderer.kind;
     canvas.dataset.petFrames = String(asset.frames.length);
     canvas.dataset.petDuration = String(asset.durations.reduce((a, b) => a + b, 0));

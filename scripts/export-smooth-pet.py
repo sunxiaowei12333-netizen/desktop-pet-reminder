@@ -17,24 +17,26 @@ for (id,spec),label in zip(metadata.items(),labels):
     palette_image=Image.new('P',(1,1));palette_image.putpalette(palette)
     for i in range(source.n_frames):
         source.seek(i);rgba=np.array(source.convert('RGBA')).astype('float32');rgba[:,:,:3]*=rgba[:,:,3:4]/255.;poses.append(rgba);delays.append(source.info['duration'])
-    width,height=source.size;atlas=np.array(Image.open(ASSETS/f'motion-{id}.png'));fields=[];grid=spec['gridSize']
+    width,height=source.size;atlas=np.array(Image.open(ASSETS/f'motion-{id}.png'));fields=[];masks=[];grid=spec['gridSize']
     for i in range(spec['pairs']*2):
         x=i%spec['columns']*grid;y=i//spec['columns']*grid
         flow=(atlas[y:y+grid,x:x+grid,:2].astype('float32')-128)/127*spec['range']
         fields.append(cv2.resize(flow,(width,height),interpolation=cv2.INTER_LINEAR)*width/grid)
+        masks.append(cv2.resize(atlas[y:y+grid,x:x+grid,2].astype('float32')/255,(width,height),interpolation=cv2.INTER_LINEAR))
     yy,xx=np.mgrid[:height,:width].astype('float32');sequence=[];encoded=[];total=sum(delays)
     for tick in range(total//40):
         time=tick*40;index=0
         while time>=delays[index]:time-=delays[index];index+=1
         mix=time/delays[index]
-        def warp(pose,field,amount):
+        def warp(pose,field,mask,amount):
             sx=xx.copy();sy=yy.copy()
             for _ in range(4):
                 velocity=cv2.remap(field,sx,sy,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE);sx=xx-amount*velocity[:,:,0];sy=yy-amount*velocity[:,:,1]
-            return cv2.remap(poses[pose],sx,sy,cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT)
-        a=warp(index,fields[index*2],mix);b=warp((index+1)%len(poses),fields[index*2+1],1-mix)
+            return cv2.remap(poses[pose],sx,sy,cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT),cv2.remap(mask,sx,sy,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
+        a,confidence_a=warp(index,fields[index*2],masks[index*2],mix);b,confidence_b=warp((index+1)%len(poses),fields[index*2+1],masks[index*2+1],1-mix)
         rgba=(a if mix<.5 else b).copy()
         overlap=np.clip((np.minimum(a[:,:,3:4],b[:,:,3:4])/255.-.94)/(.995-.94),0,1);overlap=overlap*overlap*(3-2*overlap)
+        overlap*=np.minimum(confidence_a,confidence_b)[:,:,None]
         ca=a[:,:,:3]/np.maximum(a[:,:,3:4]/255.,.0001);cb=b[:,:,:3]/np.maximum(b[:,:,3:4]/255.,.0001)
         blend=mix*mix*(3-2*mix);material=ca*(1-blend)+cb*blend
         rgba[:,:,:3]=rgba[:,:,:3]*(1-overlap)+material*(rgba[:,:,3:4]/255.)*overlap
@@ -55,4 +57,4 @@ for (id,spec),label in zip(metadata.items(),labels):
     report.append({'action':id,'file':dest.name,'frames':check.n_frames,'durationMs':ms,'exportFps':25,'appDisplayRate':'follows display refresh; tested near 60 fps'})
     print(id,check.n_frames,'frames',ms,'ms',flush=True)
 (output/'素材信息.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
-(output/'使用说明.txt').write_text('休息时刻0.1.11纹理稳定版，2026-10-30。\nApp以屏幕刷新率连续补间，测试约60fps。此处GIF与视频使用相同的轮廓保护与纹理连续过渡规则按25fps导出，GIF每轮3.2秒，视频循环三遍9.6秒。\n这是重新导出的流畅版，替代之前16帧GIF；不是原始16姿态文件的直接复制。GIF透明边缘受其格式限制，视频为白底1080方形画布（源素材非原生1080p）。\n')
+(output/'使用说明.txt').write_text('休息时刻0.1.12遮挡修复版，2026-10-30。\nApp以屏幕刷新率连续补间，测试约60fps。此处GIF与视频使用相同的轮廓、内部遮挡保护与纹理过渡规则按25fps导出，GIF每轮3.2秒，视频循环三遍9.6秒。\n这是重新导出的流畅版，替代之前16帧GIF；不是原始16姿态文件的直接复制。GIF透明边缘受其格式限制，视频为白底1080方形画布（源素材非原生1080p）。\n')

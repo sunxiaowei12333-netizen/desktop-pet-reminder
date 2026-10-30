@@ -5,8 +5,9 @@
     "columns": 4,
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
+    "occlusionConfidence": true,
     "sourceSha256": "fdf3ee490f522aed654c56ce9945b28ace0f752bce480cdbaed26df77704e063",
-    "atlasSha256": "2a07ef79502ee2bd59bf897d476ab560ab0a0ad8e8ed157ddacbd2d64ec192d9"
+    "atlasSha256": "0e3d24a286f655de7068292e8d5f960ee44584ff91a27ee331e97c3ab917683d"
   },
   "rest": {
     "range": 16,
@@ -14,8 +15,9 @@
     "columns": 4,
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
+    "occlusionConfidence": true,
     "sourceSha256": "283e52300684a379946c64c22a850072dc2322c3fae0b0720efef4d08d1e133a",
-    "atlasSha256": "94caaa893aefefb500dc18a83fc42c64c5db2d8355e283bab65a5d68befef252"
+    "atlasSha256": "f7b057c2e2a57844a55154e0d2b1265ee664b5283be70bd929ab74c8fb059502"
   },
   "look": {
     "range": 16,
@@ -23,8 +25,9 @@
     "columns": 4,
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
+    "occlusionConfidence": true,
     "sourceSha256": "b33e7d03e29d7a69c7618bda9c2f2ba6fb1d4df61f7f3174130aa81ca17520d2",
-    "atlasSha256": "410149dce9cba90ff4100d17892956f0527ba4974b733e9cb3c161c9ba34146f"
+    "atlasSha256": "9c9a0ea532717dc9cd5653612b530792095905ce0fe41723e9012203244c9581"
   },
   "stretch": {
     "range": 32,
@@ -32,8 +35,9 @@
     "columns": 4,
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
+    "occlusionConfidence": true,
     "sourceSha256": "b93eb21501ed0da7f8c0e2f146cdbb8d45ac4bfac411c21542c9cec4a0c1a5e5",
-    "atlasSha256": "ba74dd7a0aecd1c612e79dc9e5f5d535518483372f343b50aff905bd304dff3f"
+    "atlasSha256": "80a9bacc6813e7955c0fe6e68fe8b71c89ab6d826d4f1632dbc2c851521a822a"
   },
   "companion": {
     "range": 24,
@@ -41,8 +45,9 @@
     "columns": 4,
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
+    "occlusionConfidence": true,
     "sourceSha256": "858676f28f881aa82b9724d301105a1ee1b6df2f58be1d081d910ab9f37e8429",
-    "atlasSha256": "8c439f034e696ff8e4790d3583b333f3ebae0a31d066bf6487f0011ce08c7947"
+    "atlasSha256": "8ba3c1f393f6e1f8d780dfc6d8c5109b6f4a0de7eac7239731f1e8be7db40285"
   },
   "blink": {
     "range": 8,
@@ -50,7 +55,8 @@
     "columns": 4,
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
+    "occlusionConfidence": true,
     "sourceSha256": "a4ebe3a3099df7a46ae43e6e0b653a94fecd56cc05c4862836bafd87de6e0942",
-    "atlasSha256": "286cb7c9e94a17596e132e93f092b8b3760d206c90845e725ecf90d6fea375a6"
+    "atlasSha256": "c75898ca8013f24af62d1dda326f16ebf6b5c70be45f2ae87805a32452e142b0"
   }
 }

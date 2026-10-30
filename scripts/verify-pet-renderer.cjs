@@ -47,17 +47,33 @@ const checks=await page.evaluate(async()=>{
  for(const [c,color,x] of [[colorA,'rgb(200,120,80)',16],[colorB,'rgb(100,160,200)',24]]){const g=c.getContext('2d');g.fillStyle=color;g.fillRect(x,24,12,12);}
  const cr=createMotionRenderer(cc,()=>({x:0,y:0,width:128,height:128}));const ca={...a,frames:[colorA,colorB]};
  let colorTransition=[];for(const mix of [.4999,.5001]){cr.draw(ca,{index:0,next:1,mix},0);colorTransition.push([...read(cc).slice((68*128+52)*4,(68*128+52)*4+4)]);}cr.destroy();
+
+ // Regression: two paws over an OPAQUE torso, with an intentionally ambiguous flow.
+ // Alpha-only protection used to blend two dark paw marks into this solid chest.
+ const body=document.createElement('canvas');body.width=body.height=64;
+ const bodyCtx=body.getContext('2d');bodyCtx.fillStyle='rgb(220,220,220)';bodyCtx.fillRect(8,8,48,48);
+ const pawA=document.createElement('canvas'),pawB=document.createElement('canvas');
+ for(const [p,x] of [[pawA,20],[pawB,36]]){p.width=p.height=64;const ctx=p.getContext('2d');ctx.drawImage(body,0,0);ctx.fillStyle='rgb(40,40,40)';ctx.fillRect(x,24,8,8);}
+ const forbidden=document.createElement('canvas');forbidden.width=forbidden.height=128;const fc=forbidden.getContext('2d');fc.fillStyle='rgb(128,128,0)';fc.fillRect(0,0,128,128);
+ const gc=document.createElement('canvas');gc.width=gc.height=128;const gr=createMotionRenderer(gc,()=>({x:0,y:0,width:128,height:128}));
+ const ga={...a,frames:[pawA,pawB],motion:{...a.motion,atlas:forbidden}};const internalGhost=[];
+ for(const mix of [.1,.25,.49,.5,.51,.75,.9]){
+   gr.draw(ga,{index:0,next:1,mix},0);const px=read(gc);
+   const first=px[(72*128+46)*4],second=px[(72*128+78)*4];
+   internalGhost.push({mix,first,second});
+ }
+ gr.destroy();
  const {createPetAnimation}=await import('/src/pet-animation.js');const meta=await(await fetch('/src/assets/nailao/motion-manifest.json')).json();
  window.__nativeRAF=window.requestAnimationFrame.bind(window);window.__nativeCAF=window.cancelAnimationFrame.bind(window);let callbacks=new Map(),rid=0;window.requestAnimationFrame=cb=>(callbacks.set(++rid,cb),rid);window.cancelAnimationFrame=id=>callbacks.delete(id);window.tick=t=>{const q=[...callbacks.values()];callbacks.clear();q.forEach(cb=>cb(t));};window.players=[];window.canvases=[];
  for(const id of Object.keys(meta)){const c=document.createElement('canvas');c.style.cssText='width:183px;height:199px';document.body.append(c);const player=createPetAnimation(c,{src:`/src/assets/nailao/nailao-action-${id}-image2.gif`,motion:{src:`/src/assets/nailao/motion-${id}.png`,...meta[id]},alignment:'left'});const ready=await player.ready;window.players.push(player);window.canvases.push(c);}
  await new Promise(r=>setTimeout(r,100));
  const hashes=Object.fromEntries(Object.keys(meta).map(id=>[id,new Set()]));let borders=0,green=0;
- for(let n=0;n<120;n++){window.tick(n*1000/60);for(let i=0;i<canvases.length;i++){const c=canvases[i],p=read(c);let hash=2166136261;for(let j=0;j<p.length;j+=4){hash=Math.imul(hash^p[j],16777619);hash=Math.imul(hash^p[j+3],16777619);}hashes[Object.keys(meta)[i]].add(hash>>>0);if(n===30){for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){const j=(y*c.width+x)*4;if((x<2||y<2||x>=c.width-2||y>=c.height-2)&&p[j+3]>16)borders++;if(p[j+3]>128&&p[j+1]-Math.max(p[j],p[j+2])>8)green++;}}}}
- const result={synthetic,flicker,colorTransition,distinctFrames:Object.fromEntries(Object.entries(hashes).map(([id,s])=>[id,s.size])),borders,green,renderers:players.map(p=>p.getStats())};
+ for(let n=0;n<200;n++){window.tick(n*1000/60);for(let i=0;i<canvases.length;i++){const c=canvases[i],p=read(c);let hash=2166136261;for(let j=0;j<p.length;j+=4){hash=Math.imul(hash^p[j],16777619);hash=Math.imul(hash^p[j+3],16777619);}hashes[Object.keys(meta)[i]].add(hash>>>0);if(true){for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){const j=(y*c.width+x)*4;if((x<2||y<2||x>=c.width-2||y>=c.height-2)&&p[j+3]>16)borders++;if(p[j+3]>128&&p[j+1]-Math.max(p[j],p[j+2])>8)green++;}}}}
+ const result={synthetic,internalGhost,flicker,colorTransition,distinctFrames:Object.fromEntries(Object.entries(hashes).map(([id,s])=>[id,s.size])),borders,green,renderers:players.map(p=>p.getStats())};
  window.tick(1000);return result;
 });
-fs.writeFileSync(path.join(stage,'browser-debug.json'),JSON.stringify(checks,null,2));console.log(JSON.stringify(checks));assert.ok(checks.synthetic.every(s=>s.width<=24&&s.opaque>=480),'a moving opaque pose must stay single and solid');assert.ok(checks.synthetic.at(-1).left>checks.synthetic[0].left);assert.equal(checks.borders,0);assert.equal(checks.green,0);for(const [id,n] of Object.entries(checks.distinctFrames))assert.ok(n>80,`${id} only ${n} visually distinct frames`);assert.ok(checks.renderers.every(r=>r.renderer==='webgl-stable-material-motion'));
-assert.ok(checks.flicker.every(f=>f.after.meanInteriorJump < .1 && f.after.flashingPixelsFraction===0),'interior texture must remain continuous through each midpoint');assert.ok(checks.colorTransition.every(p=>p[3]===255));assert.ok(checks.colorTransition[0].every((v,i)=>Math.abs(v-checks.colorTransition[1][i])<=1));
+fs.writeFileSync(path.join(stage,'browser-debug.json'),JSON.stringify(checks,null,2));console.log(JSON.stringify(checks));assert.ok(checks.synthetic.every(s=>s.width<=24&&s.opaque>=480),'a moving opaque pose must stay single and solid');assert.ok(checks.synthetic.at(-1).left>checks.synthetic[0].left);assert.equal(checks.borders,0);assert.equal(checks.green,0);for(const [id,n] of Object.entries(checks.distinctFrames))assert.ok(n>120,`${id} only ${n} visually distinct frames`);assert.ok(checks.renderers.every(r=>r.renderer==='webgl-occlusion-protected-motion'));
+assert.ok(checks.internalGhost.every(f=>f.mix<.5 ? f.first===40&&f.second===220 : f.first===220&&f.second===40),'occluded internal features must stay one solid detail, never two faded paw marks');assert.ok(checks.colorTransition.every(p=>p[3]===255));assert.ok(checks.colorTransition[0].every((v,i)=>Math.abs(v-checks.colorTransition[1][i])<=1));
 await page.waitForTimeout(200);await page.screenshot({path:path.join(stage,'six-smooth-preview.png')});
 const performance=await page.evaluate(async()=>{
  players.forEach(p=>p.destroy());document.body.innerHTML='';

@@ -1,4 +1,4 @@
-/** One silhouette; motion-aligned interior material changes continuously. */
+/** One silhouette; only verified matching interior regions may mix material. */
 function compile(gl, type, code) {
   const shader = gl.createShader(type); gl.shaderSource(shader, code); gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
@@ -21,20 +21,24 @@ export function createMotionRenderer(canvas, placement) {
       vec2 v=(texture2D(field,clamp(at,0.0,1.0)).rg*255.0-128.0)/127.0*rangeOverGrid;
       return vec2(v.x,-v.y);
     }
-    vec4 warped(sampler2D frame, sampler2D field, float progress) {
+    vec4 warped(sampler2D frame, sampler2D field, float progress, out float confidence) {
       vec2 at=uv;
       for(int i=0;i<4;i++) at=uv-progress*velocity(field,at);
+      confidence=texture2D(field,clamp(at,0.0,1.0)).b;
       if(at.x<0.0||at.y<0.0||at.x>1.0||at.y>1.0) return vec4(0.0);
       return texture2D(frame,at);
     }
     void main() {
-      vec4 a=warped(pose,motion,amount);
-      vec4 b=warped(nextPose,nextMotion,1.0-amount);
+      float confidenceA,confidenceB;
+      vec4 a=warped(pose,motion,amount,confidenceA);
+      vec4 b=warped(nextPose,nextMotion,1.0-amount,confidenceB);
       // Only one contour contributes coverage. No translucent duplicate paws/tail.
       vec4 solid=amount<0.5?a:b;
-      // Interpolate MATERIAL only where both aligned poses are fully opaque.
+      // Opaque overlap is insufficient: a paw may cover an equally opaque chest.
+      // Confidence masks forbid mixing details around internal edges/occlusions.
+      // Interpolate material only in stable, matched regions.
       // Unlike switching source images at t=.5 this is continuous inside the body.
-      float overlap=smoothstep(0.94,0.995,min(a.a,b.a));
+      float overlap=smoothstep(0.94,0.995,min(a.a,b.a))*min(confidenceA,confidenceB);
       vec3 ca=a.rgb/max(a.a,0.0001), cb=b.rgb/max(b.a,0.0001);
       vec3 material=mix(ca,cb,smoothstep(0.0,1.0,amount));
       gl_FragColor=vec4(mix(solid.rgb,material*solid.a,overlap),solid.a);
@@ -64,7 +68,7 @@ export function createMotionRenderer(canvas, placement) {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, staging);
   }
   return {
-    kind: 'webgl-stable-material-motion',
+    kind: 'webgl-occlusion-protected-motion',
     draw(asset, state, padding) {
       if (gl.isContextLost()) return;
       if (previousAsset !== asset) { uploadedPair = -1; previousAsset = asset; }
