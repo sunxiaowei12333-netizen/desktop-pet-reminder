@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { createPetAnimation } from "./pet-animation.js";
-import restSheet from "./assets/nailao/rest-repaired-sheet.png";
 
 export default function SmoothPet({ src, alt, className = "" }) {
   const canvas = useRef(null);
@@ -8,10 +7,8 @@ export default function SmoothPet({ src, alt, className = "" }) {
   useEffect(() => {
     let active = true;
     setReady(false);
-    const resting = /nailao-action-rest-image2/.test(src || "");
     const player = createPetAnimation(canvas.current, {
-      src: resting ? restSheet : src,
-      sheet: resting ? { columns: 4, rows: 3, frameDuration: 180 } : undefined,
+      src,
       alignment: /\bdesktop-cat\b/.test(className) ? "left" : "center",
     });
     player.ready.then(() => { if (active) setReady(true); }).catch(error => {

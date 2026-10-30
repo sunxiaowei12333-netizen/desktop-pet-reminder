@@ -29,11 +29,12 @@ test('a halfway timestamp paints one complete source pose, with no second-pose g
   assert.deepEqual([...ctx.pixels], [0, 0, 0, 255], 'previous paw must be cleared completely');
 });
 
-test('source timing retains 22 frames and the original 3.08-second cycle', () => {
-  const durations = Array(22).fill(140);
-  assert.equal(sampleTimeline(durations, 3079).index, 21);
-  assert.equal(sampleTimeline(durations, 3080).index, 0);
-  assert.equal(sampleTimeline(durations, 3080 + 140).index, 1);
+test('the complete 16-pose cycle respects neutral and peak holds before looping', () => {
+  const durations = Array.from({ length: 16 }, (_, i) => [0, 7, 8, 15].includes(i) ? 260 : 180);
+  assert.equal(sampleTimeline(durations, 259).index, 0);
+  assert.equal(sampleTimeline(durations, 260).index, 1);
+  assert.equal(sampleTimeline(durations, 3199).index, 15);
+  assert.equal(sampleTimeline(durations, 3200).index, 0);
 });
 
 test('transparent margin removal moves the visible cat closer without scaling it', () => {

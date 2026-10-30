@@ -1,6 +1,6 @@
 # 休息时刻
 
-一个 macOS 菜单栏休息提醒 App，当前版本为 **0.1.7**。内置同一只猫咪的六个透明动作，可设置提醒时段、间隔和正文。
+一个 macOS 菜单栏休息提醒 App，当前版本为 **0.1.8**。内置同一只猫咪的六个透明动作，可设置提醒时段、间隔和正文。
 
 ## 当前行为
 
@@ -11,8 +11,9 @@
 - 遵守提醒时段，支持跨夜；休眠后最多补发一次，避免集中弹出。
 - 猫咪与卡片分为两个透明置顶窗口，可拖动任一窗口整体移动，垂直居中并限制在屏幕内。
 - 弹窗和猫咪保留90%尺寸；卡片右侧留白收紧，四角只有一层背景；猫咪按可见轮廓靠近卡片。
-- 播放完整原始帧，不叠加前后帧，不做光流混合；“趴下休息”使用修复后的12帧素材。
-- App 使用云朵 Logo；本地状态保存在 Electron 的 userData 目录，触发历史保留最近200条。
+- 六个动作均使用重制的16帧透明 GIF，完整循环3.2秒。播放器与导出直接读取同一份 GIF，不叠加前后帧，不做光流混合，也不单独裁切趴下动作。
+- 素材从真实 Alpha 帧图提取完整主体，不用绿幕抠图；六动作共用同一构建规则，保留至少24px透明安全边距，每个动作使用固定全局调色板。
+- App 使用云朵 Logo；macOS 15 的传统 ICNS 已包含连续圆角与透明留白，1024px画布内可见主体为824px。本地状态保存在 Electron 的 userData 目录，触发历史保留最近200条。
 
 手动测试不会改变自动提醒时间。“开始时间”与“结束时间”相同表示全天；结束时间不包含在提醒时段内。
 
@@ -54,6 +55,19 @@ npm run export:gifs -- /path/to/output
 
 默认输出到 `release/pet-gifs/`，包括挥手提醒、趴下休息、侧身看看、伸懒腰、安静陪伴、眨眼提示。
 
+## 维护素材与图标
+
+原始透明帧图保存在 `assets/pet-motion-v2/`。构建时按 Alpha 连通主体提取16只猫，避免生成帧越过网格边界时被固定切格误裁；发现主体触及整张帧图外缘会报错，必须修复源图。
+
+```bash
+python3 -m pip install -r scripts/requirements-assets.txt
+npm run build:pet-assets
+npm run build:icon # macOS，使用系统 iconutil
+npm test
+```
+
+`assets/pet-motion-v2/validation.json` 记录帧数、循环时长、逐帧边界、绿色杂色检查和最终 GIF 的 SHA-256。自动检查不代替动作连贯性与完整解剖轮廓的人工视觉检查。
+
 ## 项目结构
 
 - `src/main.jsx`：设置界面、素材预览。
@@ -61,6 +75,7 @@ npm run export:gifs -- /path/to/output
 - `src/SmoothPet.jsx`、`src/pet-animation.js`：透明原始帧播放和可见区域对齐。
 - `electron/main.cjs`：原生窗口、IPC、菜单栏和构建资源解析。
 - `electron/reminder-runtime.cjs`：动作轮换、计时、暂停、稍后、持久化和触发历史。
-- `assets/logo.png`、`assets/RestMoment.icns`：云朵图标源文件与macOS图标。
+- `assets/logo.png`、`assets/RestMoment.png`、`assets/RestMoment.icns`：云朵原图、带透明留白的图标与macOS图标。
+- `assets/pet-motion-v2/`：六个重制动作的透明帧图与构建验证记录。
 - `tests/`：计时、动作轮换、窗口同步、透明帧清除和macOS归档回归验证。
 - `docs/`：可选的图像生成服务协议。
