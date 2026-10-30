@@ -57,4 +57,4 @@ for (id,spec),label in zip(metadata.items(),labels):
     report.append({'action':id,'file':dest.name,'frames':check.n_frames,'durationMs':ms,'exportFps':25,'appDisplayRate':'follows display refresh; tested near 60 fps'})
     print(id,check.n_frames,'frames',ms,'ms',flush=True)
 (output/'素材信息.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
-(output/'使用说明.txt').write_text('休息时刻0.1.12遮挡修复版，2026-10-30。\nApp以屏幕刷新率连续补间，测试约60fps。此处GIF与视频使用相同的轮廓、内部遮挡保护与纹理过渡规则按25fps导出，GIF每轮3.2秒，视频循环三遍9.6秒。\n这是重新导出的流畅版，替代之前16帧GIF；不是原始16姿态文件的直接复制。GIF透明边缘受其格式限制，视频为白底1080方形画布（源素材非原生1080p）。\n')
+(output/'使用说明.txt').write_text('休息时刻0.1.13尺寸稳定版，2026-10-30。\nApp以屏幕刷新率连续补间，测试约60fps。此处GIF与视频使用相同的轮廓、内部遮挡保护与纹理过渡规则按25fps导出，GIF每轮3.2秒，视频循环三遍9.6秒。\n这是重新导出的流畅版，替代之前16帧GIF；不是原始16姿态文件的直接复制。GIF透明边缘受其格式限制，视频为白底1080方形画布（源素材非原生1080p）。\n')

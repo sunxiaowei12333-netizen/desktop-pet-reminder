@@ -1,7 +1,7 @@
 {
   "name": "desktop-pet-reminder",
   "private": true,
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "一个 macOS 菜单栏桌面宠物提醒工具。",
   "author": "Local",
   "type": "module",

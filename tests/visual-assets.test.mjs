@@ -23,16 +23,21 @@ for (const id of ["wave", "rest", "look", "stretch", "companion", "blink"]) {
     assert.equal(metadata.delay.reduce((a, b) => a + b, 0), 3200);
     const { data, info } = await sharp(file, { animated: true }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     const height = info.height / 16;
+    const areas = [], bottoms = [], widths = [];
     for (let frame = 0; frame < 16; frame++) {
-      let visible = 0;
+      let visible = 0, bottom = 0, left = info.width, right = 0;
       for (let y = 0; y < height; y++) for (let x = 0; x < info.width; x++) {
         const i = ((frame * height + y) * info.width + x) * 4;
         if (data[i + 3] <= 128) continue;
-        visible++;
+        visible++; bottom = Math.max(bottom, y); left = Math.min(left, x); right = Math.max(right, x);
         assert.ok(x >= 24 && y >= 24 && x < info.width - 24 && y < height - 24, `cropped ${id} frame ${frame}`);
         assert.ok(data[i + 1] - Math.max(data[i], data[i + 2]) <= 8, `green ${id} frame ${frame}`);
       }
+      areas.push(visible); bottoms.push(bottom); widths.push(right - left + 1);
       assert.ok(visible > 10000, `empty ${id} frame ${frame}`);
     }
+    assert.ok(Math.sqrt(Math.max(...areas) / Math.min(...areas)) - 1 < .01, `${id} changes overall cat scale within one action`);
+    assert.ok(Math.max(...bottoms) - Math.min(...bottoms) <= 4, `${id} ground baseline drifts`);
+    if (id === 'stretch') assert.ok(Math.max(...widths) / Math.min(...widths) > 1.4, 'scale correction must preserve the extended stretch pose');
   });
 }

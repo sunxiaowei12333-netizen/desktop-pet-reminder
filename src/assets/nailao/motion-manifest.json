@@ -6,18 +6,18 @@
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
     "occlusionConfidence": true,
-    "sourceSha256": "fdf3ee490f522aed654c56ce9945b28ace0f752bce480cdbaed26df77704e063",
-    "atlasSha256": "0e3d24a286f655de7068292e8d5f960ee44584ff91a27ee331e97c3ab917683d"
+    "sourceSha256": "fa8048e37a6651cb8df94c7e020586c4fc5752b161fc452c162d0b11759fa23f",
+    "atlasSha256": "1253e1d967dac282618a5c48c6fda71a85e8702e6747e2e08ba4ca3711b588ea"
   },
   "rest": {
-    "range": 16,
+    "range": 8,
     "gridSize": 224,
     "columns": 4,
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
     "occlusionConfidence": true,
-    "sourceSha256": "283e52300684a379946c64c22a850072dc2322c3fae0b0720efef4d08d1e133a",
-    "atlasSha256": "f7b057c2e2a57844a55154e0d2b1265ee664b5283be70bd929ab74c8fb059502"
+    "sourceSha256": "dda6179ae202185b89d0f5b60b4c63221f20630c739e7d17e6153faf712944de",
+    "atlasSha256": "87e51b24edf6a7a4f2d79498c523a09b22e756b64f4fde77c12fc327df6ec497"
   },
   "look": {
     "range": 16,
@@ -26,8 +26,8 @@
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
     "occlusionConfidence": true,
-    "sourceSha256": "b33e7d03e29d7a69c7618bda9c2f2ba6fb1d4df61f7f3174130aa81ca17520d2",
-    "atlasSha256": "9c9a0ea532717dc9cd5653612b530792095905ce0fe41723e9012203244c9581"
+    "sourceSha256": "9342f763e4c5a0ad9e5e5fb51797e7cd3a17379c1be8eb60da318be737c1a5c4",
+    "atlasSha256": "cef51ffca9cdc90153f7ee0fce07562257f161d36d221efec12d0d09db8c6690"
   },
   "stretch": {
     "range": 32,
@@ -36,8 +36,8 @@
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
     "occlusionConfidence": true,
-    "sourceSha256": "b93eb21501ed0da7f8c0e2f146cdbb8d45ac4bfac411c21542c9cec4a0c1a5e5",
-    "atlasSha256": "80a9bacc6813e7955c0fe6e68fe8b71c89ab6d826d4f1632dbc2c851521a822a"
+    "sourceSha256": "c379962c9625327aea7895de9d09caa388b88441419c10dc4f303189e7f2dc50",
+    "atlasSha256": "7bfc5963ab971e3492cf6596894793818a1066f631100aa34c50ba9a149561de"
   },
   "companion": {
     "range": 24,
@@ -46,8 +46,8 @@
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
     "occlusionConfidence": true,
-    "sourceSha256": "858676f28f881aa82b9724d301105a1ee1b6df2f58be1d081d910ab9f37e8429",
-    "atlasSha256": "8ba3c1f393f6e1f8d780dfc6d8c5109b6f4a0de7eac7239731f1e8be7db40285"
+    "sourceSha256": "f73ba4a89ee16a7890ea0e434755a34f82f65d18354031443512f5f07097c1f1",
+    "atlasSha256": "6dedfd6f82334b64c81c6451792c994bedf2d8ed3eeb64cb38013602061ec7d5"
   },
   "blink": {
     "range": 8,
@@ -56,7 +56,7 @@
     "pairs": 16,
     "flowSmoothingSigma": 2.0,
     "occlusionConfidence": true,
-    "sourceSha256": "a4ebe3a3099df7a46ae43e6e0b653a94fecd56cc05c4862836bafd87de6e0942",
-    "atlasSha256": "c75898ca8013f24af62d1dda326f16ebf6b5c70be45f2ae87805a32452e142b0"
+    "sourceSha256": "6ce875057fface9bedeec97ea1f7611411894f85369cc9fab43a8fc6930de581",
+    "atlasSha256": "666ddf18990ea7b430a2de47fcd8b488fef5207fe2913c75cc6df26e748bb4b2"
   }
 }
