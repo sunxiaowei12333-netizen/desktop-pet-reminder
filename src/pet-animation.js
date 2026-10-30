@@ -1,4 +1,5 @@
-/** Original transparent frames, without temporal blending or optical-flow warping. */
+/** Original transparent poses with precomputed, single-pose motion compensation. */
+import { createMotionRenderer } from './pet-motion-renderer.js';
 const assets = new Map();
 const MAX_IDLE_ASSETS = 2;
 
@@ -56,7 +57,17 @@ export function sampleTimeline(durations, elapsed) {
   }
 }
 
-async function decodeAsset(src, sheet) {
+async function decodeMotion(spec) {
+  const response = await fetch(spec.src);
+  if (!response.ok && response.status !== 0) throw new Error('Motion atlas could not be read');
+  const atlas = await createImageBitmap(await response.blob());
+  if (atlas.width !== spec.columns * spec.gridSize || atlas.height !== Math.ceil(spec.pairs * 2 / spec.columns) * spec.gridSize) {
+    atlas.close(); throw new Error('Motion atlas dimensions do not match its metadata');
+  }
+  return { ...spec, atlas };
+}
+
+async function decodeAsset(src, sheet, motion) {
   const response = await fetch(src);
   if (!response.ok && response.status !== 0) throw new Error(`Pet image could not be read: ${response.status}`);
   const data = await response.arrayBuffer();
@@ -115,16 +126,21 @@ async function decodeAsset(src, sheet) {
     }
     const asset = { frames, durations, width: frames[0].width, height: frames[0].height };
     asset.bounds = measureContentBounds(frames, asset.width, asset.height);
+    if (motion) {
+      const decoded = await decodeMotion(motion);
+      if (decoded.pairs !== frames.length) { decoded.atlas.close(); throw new Error('Motion atlas pose count mismatch'); }
+      asset.motion = decoded;
+    }
     return asset;
   } catch (error) { frames.forEach(frame => frame.close()); throw error; }
 }
 
-function acquireAsset(src, sheet) {
-  const key = `${src}|${JSON.stringify(sheet || null)}`;
+function acquireAsset(src, sheet, motion) {
+  const key = `${src}|${JSON.stringify(sheet || null)}|${JSON.stringify(motion || null)}`;
   let entry = assets.get(key);
   if (!entry) {
     entry = { refs: 0, used: performance.now(), asset: null };
-    entry.promise = decodeAsset(src, sheet).then(asset => { entry.asset = asset; return asset; }).catch(error => { assets.delete(key); throw error; });
+    entry.promise = decodeAsset(src, sheet, motion).then(asset => { entry.asset = asset; return asset; }).catch(error => { assets.delete(key); throw error; });
     assets.set(key, entry);
   }
   entry.refs++;
@@ -134,19 +150,20 @@ function acquireAsset(src, sheet) {
     const idle = [...assets.entries()].filter(([, item]) => item.refs === 0).sort((a, b) => b[1].used - a[1].used);
     idle.slice(MAX_IDLE_ASSETS).forEach(([idleKey, item]) => {
       assets.delete(idleKey);
-      item.promise.then(asset => asset.frames.forEach(frame => frame.close())).catch(() => {});
+      item.promise.then(asset => { asset.frames.forEach(frame => frame.close()); asset.motion?.atlas.close(); }).catch(() => {});
     });
   } };
 }
 
-export function createPetAnimation(canvas, { src, sheet, padding = .05, alignment = "center" } = {}) {
+export function createPetAnimation(canvas, { src, sheet, motion, padding = .05, alignment = "center" } = {}) {
   if (!canvas || !src) throw new Error('A canvas and image source are required');
-  const handle = acquireAsset(src, sheet);
-  let destroyed = false, asset, renderer, raf = 0, elapsed = 0, lastTime = null, intersecting = true, renderedFrames = 0;
+  const handle = acquireAsset(src, sheet, motion);
+  let destroyed = false, asset, renderer, raf = 0, elapsed = 0, lastTime = null, intersecting = true, renderedFrames = 0, lastStats = -Infinity, currentDpr;
   const inset = Math.max(0, Math.min(.2, padding));
   function resize() {
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
+    currentDpr = dpr;
     const width = Math.max(1, Math.round((rect.width || 220) * dpr));
     const height = Math.max(1, Math.round((rect.height || 240) * dpr));
     if (canvas.width !== width) canvas.width = width;
@@ -157,11 +174,15 @@ export function createPetAnimation(canvas, { src, sheet, padding = .05, alignmen
     if (destroyed || !asset || document.hidden || !intersecting) { lastTime = null; return; }
     if (lastTime !== null) elapsed += now - lastTime;
     lastTime = now;
-    resize();
-    renderer.draw(asset, sampleTimeline(asset.durations, elapsed), inset);
-    canvas.dataset.petMotion = 'source-frames';
-    canvas.dataset.petSourceFrame = String(sampleTimeline(asset.durations, elapsed).index);
-    canvas.dataset.petRenderedFrames = String(++renderedFrames);
+    if (currentDpr !== Math.min(2, window.devicePixelRatio || 1)) resize();
+    const state = sampleTimeline(asset.durations, elapsed);
+    renderer.draw(asset, state, inset);
+    renderedFrames++;
+    if (now - lastStats >= 250) {
+      canvas.dataset.petSourceFrame = String(state.index);
+      canvas.dataset.petRenderedFrames = String(renderedFrames);
+      lastStats = now;
+    }
     raf = requestAnimationFrame(draw);
   }
   function updateVisibility() {
@@ -179,15 +200,19 @@ export function createPetAnimation(canvas, { src, sheet, padding = .05, alignmen
     if (destroyed) return null;
     asset = decoded;
     resize();
-    const context = canvas.getContext('2d', { alpha: true });
-    if (!context) throw new Error('Canvas rendering is unavailable');
-    renderer = {
-      kind: 'canvas-source-frames',
-      draw(asset, state, padding) {
-        paintSourceFrame(context, asset, state.index, canvas.width, canvas.height, padding, alignment);
-      },
-      destroy() { context.clearRect(0, 0, canvas.width, canvas.height); }
-    };
+    renderer = asset.motion ? createMotionRenderer(canvas, (asset, width, height, padding) => framePlacement(asset, width, height, padding, alignment)) : null;
+    if (!renderer) {
+      const context = canvas.getContext('2d', { alpha: true });
+      if (!context) throw new Error('Canvas rendering is unavailable');
+      renderer = {
+        kind: 'canvas-source-frames',
+        draw(asset, state, padding) {
+          paintSourceFrame(context, asset, state.index, canvas.width, canvas.height, padding, alignment);
+        },
+        destroy() { context.clearRect(0, 0, canvas.width, canvas.height); }
+      };
+    }
+    canvas.dataset.petMotion = asset.motion && renderer.kind.startsWith('webgl') ? 'single-pose-compensated' : 'source-frames';
     canvas.dataset.petRenderer = renderer.kind;
     canvas.dataset.petFrames = String(asset.frames.length);
     canvas.dataset.petDuration = String(asset.durations.reduce((a, b) => a + b, 0));
@@ -195,7 +220,7 @@ export function createPetAnimation(canvas, { src, sheet, padding = .05, alignmen
     updateVisibility();
     return { frameCount: asset.frames.length, duration: asset.durations.reduce((a, b) => a + b, 0), renderer: renderer.kind };
   });
-  return { ready, destroy() {
+  return { ready, getStats() { return { renderedFrames, elapsed, renderer: renderer?.kind }; }, destroy() {
     if (destroyed) return;
     destroyed = true; cancelAnimationFrame(raf); document.removeEventListener('visibilitychange', updateVisibility);
     observer?.disconnect(); resizeObserver?.disconnect(); renderer?.destroy(); handle.release();

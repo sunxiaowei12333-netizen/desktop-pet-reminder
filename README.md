@@ -1,6 +1,6 @@
 # 休息时刻
 
-一个 macOS 菜单栏休息提醒 App，当前版本为 **0.1.9**。内置同一只猫咪的六个透明动作，可设置提醒时段、间隔和正文。
+一个 macOS 菜单栏休息提醒 App，当前版本为 **0.1.10**。内置同一只猫咪的六个透明动作，可设置提醒时段、间隔和正文。
 
 ## 当前行为
 
@@ -11,7 +11,8 @@
 - 遵守提醒时段，支持跨夜；休眠后最多补发一次，避免集中弹出。
 - 猫咪与卡片分为两个透明置顶窗口，可拖动任一窗口整体移动，垂直居中并限制在屏幕内。
 - 卡片234px宽、四角统一为14px CSS圆角（随90%内容缩放）；背景与窗口等宽，避免右侧圆角被裁切。猫咪窗口183×199px，与卡片间隔13px，按可见轮廓对齐。
-- 六个动作均使用重制的16帧透明 GIF，完整循环3.2秒。播放器与导出直接读取同一份 GIF，不叠加前后帧，不做光流混合，也不单独裁切趴下动作。
+- 六个动作各有16张透明关键姿态，完整循环3.2秒。App使用预计算的双向位移图，在显示刷新率下连续补间；每一刻仅采样一张经过位移的姿态，不将两张猫半透明叠加。最后一帧到第一帧也有过渡；GPU不可用时回退到原始姿态播放。
+- 位移计算在素材构建时完成，播放时只上传小纹理；隐藏或离屏暂停播放，画布尺寸由ResizeObserver维护，避免逐帧读取布局。
 - 素材从真实 Alpha 帧图提取完整主体，不用绿幕抠图；六动作共用同一构建规则，保留至少24px透明安全边距，每个动作使用固定全局调色板。
 - App 使用云朵 Logo；macOS 15 的传统 ICNS 已包含连续圆角与透明留白，1024px画布内可见主体为824px。本地状态保存在 Electron 的 userData 目录，触发历史保留最近200条。
 
@@ -55,6 +56,16 @@ npm run export:gifs -- /path/to/output
 
 默认输出到 `release/pet-gifs/`，包括挥手提醒、趴下休息、侧身看看、伸懒腰、安静陪伴、眨眼提示。
 
+上面的命令直接复制16姿态源GIF。要导出与App连续动作相同规则的流畅版，运行：
+
+```bash
+npm run export:smooth -- /path/to/output
+# macOS可同时导出1080方形白底视频，每个动作循环三遍
+npm run export:smooth -- /path/to/output --video
+```
+
+流畅版GIF为25fps、80帧、3.2秒；App随显示器刷新率补间（六动作并行浏览器验证约60fps）。两者取样帧率不同，因此流畅版GIF不再是内置关键姿态文件的字节复制。
+
 ## 维护素材与图标
 
 原始透明帧图保存在 `assets/pet-motion-v2/`。构建时按 Alpha 连通主体提取16只猫，避免生成帧越过网格边界时被固定切格误裁；发现主体触及整张帧图外缘会报错，必须修复源图。
@@ -62,17 +73,21 @@ npm run export:gifs -- /path/to/output
 ```bash
 python3 -m pip install -r scripts/requirements-assets.txt
 npm run build:pet-assets
+npm run build:pet-motion
 npm run build:icon # macOS，使用系统 iconutil
 npm test
 ```
 
 `assets/pet-motion-v2/validation.json` 记录帧数、循环时长、逐帧边界、绿色杂色检查和最终 GIF 的 SHA-256。自动检查不代替动作连贯性与完整解剖轮廓的人工视觉检查。
 
+`src/assets/nailao/motion-manifest.json` 将位移图与对应GIF的SHA-256关联；修改GIF后必须重建位移图，测试会阻止两者版本不一致。位移图包含16组正反向数据及循环接缝，不在App运行时执行光流计算。
+
 ## 项目结构
 
 - `src/main.jsx`：设置界面、素材预览。
 - `src/PetOverlay.jsx`：分离的提醒卡片和猫咪视图。
 - `src/SmoothPet.jsx`、`src/pet-animation.js`：透明原始帧播放和可见区域对齐。
+- `src/pet-motion-renderer.js`：单姿态GPU补间，不进行双画面淡入淡出。
 - `electron/main.cjs`：原生窗口、IPC、菜单栏和构建资源解析。
 - `electron/reminder-runtime.cjs`：动作轮换、计时、暂停、稍后、持久化和触发历史。
 - `assets/logo.png`、`assets/RestMoment.png`、`assets/RestMoment.icns`：云朵原图、带透明留白的图标与macOS图标。

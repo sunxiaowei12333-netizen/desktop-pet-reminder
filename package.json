@@ -1,7 +1,7 @@
 {
   "name": "desktop-pet-reminder",
   "private": true,
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "一个 macOS 菜单栏桌面宠物提醒工具。",
   "author": "Local",
   "type": "module",
@@ -18,7 +18,9 @@
     "verify:build": "node scripts/verify-build.mjs",
     "export:gifs": "node scripts/export-pet-gifs.mjs",
     "build:icon": "node scripts/build-macos-icon.mjs",
-    "build:pet-assets": "python3 scripts/build-nailao-gifs.py"
+    "build:pet-assets": "python3 scripts/build-nailao-gifs.py",
+    "build:pet-motion": "python3 scripts/build-pet-motion.py",
+    "export:smooth": "python3 scripts/export-smooth-pet.py"
   },
   "dependencies": {
     "@icons-pack/react-simple-icons": "^13.13.0",

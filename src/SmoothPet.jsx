@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPetAnimation } from "./pet-animation.js";
+import { motionAssetFor } from "./pet-motion-assets.js";
 
 export default function SmoothPet({ src, alt, className = "" }) {
   const canvas = useRef(null);
@@ -9,6 +10,7 @@ export default function SmoothPet({ src, alt, className = "" }) {
     setReady(false);
     const player = createPetAnimation(canvas.current, {
       src,
+      motion: motionAssetFor(src),
       alignment: /\bdesktop-cat\b/.test(className) ? "left" : "center",
     });
     player.ready.then(() => { if (active) setReady(true); }).catch(error => {
@@ -18,6 +20,6 @@ export default function SmoothPet({ src, alt, className = "" }) {
   }, [src, className]);
   return <span className={`smooth-pet ${className}`}>
     <img src={src} alt={alt} draggable={false} hidden={ready} className="smooth-pet-fallback" />
-    <canvas ref={canvas} role="img" aria-label={alt} style={{ display: ready ? "block" : "none" }} />
+    <canvas key={`${src}|${className}`} ref={canvas} role="img" aria-label={alt} style={{ display: ready ? "block" : "none" }} />
   </span>;
 }
