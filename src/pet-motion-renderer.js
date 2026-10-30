@@ -1,13 +1,4 @@
-/** Motion compensation samples ONE pose at every instant. No temporal crossfade. */
-export function motionSample(state) {
-  const forward = state.mix < .5;
-  return {
-    source: forward ? state.index : state.next,
-    field: state.index * 2 + (forward ? 0 : 1),
-    amount: forward ? state.mix : 1 - state.mix,
-  };
-}
-
+/** One silhouette; motion-aligned interior material changes continuously. */
 function compile(gl, type, code) {
   const shader = gl.createShader(type); gl.shaderSource(shader, code); gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
@@ -24,17 +15,29 @@ export function createMotionRenderer(canvas, placement) {
   const fragment = compile(gl, gl.FRAGMENT_SHADER, `
     precision highp float;
     varying vec2 uv; uniform sampler2D pose; uniform sampler2D motion;
+    uniform sampler2D nextPose; uniform sampler2D nextMotion;
     uniform float amount; uniform float rangeOverGrid;
-    vec2 velocity(vec2 at) {
-      vec2 v=(texture2D(motion,clamp(at,0.0,1.0)).rg*255.0-128.0)/127.0*rangeOverGrid;
+    vec2 velocity(sampler2D field, vec2 at) {
+      vec2 v=(texture2D(field,clamp(at,0.0,1.0)).rg*255.0-128.0)/127.0*rangeOverGrid;
       return vec2(v.x,-v.y);
     }
-    void main() {
+    vec4 warped(sampler2D frame, sampler2D field, float progress) {
       vec2 at=uv;
-      // Invert the source-to-target displacement. Iteration follows curved limbs.
-      for(int i=0;i<4;i++) at=uv-amount*velocity(at);
-      if(at.x<0.0||at.y<0.0||at.x>1.0||at.y>1.0) gl_FragColor=vec4(0.0);
-      else gl_FragColor=texture2D(pose,at);
+      for(int i=0;i<4;i++) at=uv-progress*velocity(field,at);
+      if(at.x<0.0||at.y<0.0||at.x>1.0||at.y>1.0) return vec4(0.0);
+      return texture2D(frame,at);
+    }
+    void main() {
+      vec4 a=warped(pose,motion,amount);
+      vec4 b=warped(nextPose,nextMotion,1.0-amount);
+      // Only one contour contributes coverage. No translucent duplicate paws/tail.
+      vec4 solid=amount<0.5?a:b;
+      // Interpolate MATERIAL only where both aligned poses are fully opaque.
+      // Unlike switching source images at t=.5 this is continuous inside the body.
+      float overlap=smoothstep(0.94,0.995,min(a.a,b.a));
+      vec3 ca=a.rgb/max(a.a,0.0001), cb=b.rgb/max(b.a,0.0001);
+      vec3 material=mix(ca,cb,smoothstep(0.0,1.0,amount));
+      gl_FragColor=vec4(mix(solid.rgb,material*solid.a,overlap),solid.a);
     }
   `);
   const program = gl.createProgram(); gl.attachShader(program, vertex); gl.attachShader(program, fragment); gl.linkProgram(program);
@@ -44,7 +47,7 @@ export function createMotionRenderer(canvas, placement) {
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
   gl.useProgram(program);
   const attribute = gl.getAttribLocation(program, 'position'); gl.enableVertexAttribArray(attribute); gl.vertexAttribPointer(attribute, 2, gl.FLOAT, false, 0, 0);
-  const textures = ['pose', 'motion'].map((name, index) => {
+  const textures = ['pose', 'motion', 'nextPose', 'nextMotion'].map((name, index) => {
     const texture = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + index); gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -53,36 +56,38 @@ export function createMotionRenderer(canvas, placement) {
   const uniforms = Object.fromEntries(['fit', 'offset', 'amount', 'rangeOverGrid'].map(name => [name, gl.getUniformLocation(program, name)]));
   // Canvas staging preserves flip and premultiplied-alpha semantics for ImageBitmap.
   const staging = document.createElement('canvas'), ctx = staging.getContext('2d');
-  let uploadedSource = -1, uploadedField = -1, previousAsset;
+  let uploadedPair = -1, previousAsset;
   function upload(index) {
     gl.activeTexture(gl.TEXTURE0 + index); gl.bindTexture(gl.TEXTURE_2D, textures[index]);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, index === 0);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, index % 2 === 0);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, staging);
   }
   return {
-    kind: 'webgl-single-pose-motion',
+    kind: 'webgl-stable-material-motion',
     draw(asset, state, padding) {
       if (gl.isContextLost()) return;
-      if (previousAsset !== asset) { uploadedSource = uploadedField = -1; previousAsset = asset; }
-      const sample = motionSample(state), map = asset.motion;
-      if (sample.source !== uploadedSource) {
-        staging.width = asset.width; staging.height = asset.height;
-        ctx.clearRect(0, 0, staging.width, staging.height); ctx.drawImage(asset.frames[sample.source], 0, 0); upload(0);
-        uploadedSource = sample.source;
-      }
-      if (sample.field !== uploadedField) {
-        staging.width = staging.height = map.gridSize;
-        ctx.drawImage(map.atlas, (sample.field % map.columns) * map.gridSize,
-          Math.floor(sample.field / map.columns) * map.gridSize, map.gridSize, map.gridSize, 0, 0, map.gridSize, map.gridSize);
-        upload(1); uploadedField = sample.field;
+      if (previousAsset !== asset) { uploadedPair = -1; previousAsset = asset; }
+      const map = asset.motion;
+      if (state.index !== uploadedPair) {
+        for (let side=0;side<2;side++) {
+          staging.width = asset.width; staging.height = asset.height;
+          ctx.clearRect(0, 0, staging.width, staging.height);
+          ctx.drawImage(asset.frames[side === 0 ? state.index : state.next], 0, 0); upload(side*2);
+          const field=state.index*2+side;
+          staging.width = staging.height = map.gridSize;
+          ctx.drawImage(map.atlas, (field % map.columns) * map.gridSize,
+            Math.floor(field / map.columns) * map.gridSize, map.gridSize, map.gridSize, 0, 0, map.gridSize, map.gridSize);
+          upload(side*2+1);
+        }
+        uploadedPair = state.index;
       }
       const rect = placement(asset, canvas.width, canvas.height, padding);
       gl.viewport(0, 0, canvas.width, canvas.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
       gl.uniform2f(uniforms.fit, rect.width / canvas.width, rect.height / canvas.height);
       gl.uniform2f(uniforms.offset, (rect.x + rect.width / 2) * 2 / canvas.width - 1,
         1 - (rect.y + rect.height / 2) * 2 / canvas.height);
-      gl.uniform1f(uniforms.amount, sample.amount);
+      gl.uniform1f(uniforms.amount, state.mix);
       gl.uniform1f(uniforms.rangeOverGrid, map.range / map.gridSize);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     },

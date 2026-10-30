@@ -1,5 +1,5 @@
 """Precompute dense bidirectional motion; runtime only uploads small flow maps.
-No source colors or alpha are blended. Cyclic last-to-first motion is included.
+Smooth displacement fields keep fine fur from rippling independently. Cyclic last-to-first motion is included.
 """
 from pathlib import Path
 import hashlib,json
@@ -24,7 +24,8 @@ for action in ['wave','rest','look','stretch','companion','blink']:
         for first,second in [(a,b),(b,a)]:
             dis=cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
             dis.setFinestScale(0)
-            fields.append(dis.calc(first,second,None))
+            field=dis.calc(first,second,None)
+            fields.append(cv2.GaussianBlur(field,(0,0),2.0))
     extent=max(float(np.abs(f).max()) for f in fields)
     motion_range=max(8,int(np.ceil((extent+1)/8))*8)
     atlas=np.zeros((GRID*8,GRID*4,3),dtype='uint8');atlas[:,:,2]=255
@@ -33,7 +34,7 @@ for action in ['wave','rest','look','stretch','companion','blink']:
         y=(i//4)*GRID;x=(i%4)*GRID
         atlas[y:y+GRID,x:x+GRID,:2]=encoded
     output=DEST/f'motion-{action}.png';Image.fromarray(atlas).save(output,optimize=True)
-    result[action]={'range':motion_range,'gridSize':GRID,'columns':4,'pairs':len(frames),
+    result[action]={'range':motion_range,'gridSize':GRID,'columns':4,'pairs':len(frames),'flowSmoothingSigma':2.0,
                     'sourceSha256':hashlib.sha256(source.read_bytes()).hexdigest(),
                     'atlasSha256':hashlib.sha256(output.read_bytes()).hexdigest()}
     print(action,'maximum flow',round(extent,2),'range',motion_range,'bytes',output.stat().st_size)

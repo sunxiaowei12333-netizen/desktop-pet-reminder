@@ -1,4 +1,4 @@
-/** Original transparent poses with precomputed, single-pose motion compensation. */
+/** Transparent poses with motion-aligned, continuous interior material. */
 import { createMotionRenderer } from './pet-motion-renderer.js';
 const assets = new Map();
 const MAX_IDLE_ASSETS = 2;
@@ -212,7 +212,7 @@ export function createPetAnimation(canvas, { src, sheet, motion, padding = .05, 
         destroy() { context.clearRect(0, 0, canvas.width, canvas.height); }
       };
     }
-    canvas.dataset.petMotion = asset.motion && renderer.kind.startsWith('webgl') ? 'single-pose-compensated' : 'source-frames';
+    canvas.dataset.petMotion = asset.motion && renderer.kind.startsWith('webgl') ? 'stable-material-compensated' : 'source-frames';
     canvas.dataset.petRenderer = renderer.kind;
     canvas.dataset.petFrames = String(asset.frames.length);
     canvas.dataset.petDuration = String(asset.durations.reduce((a, b) => a + b, 0));

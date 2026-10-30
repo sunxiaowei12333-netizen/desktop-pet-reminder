@@ -4,47 +4,53 @@
     "gridSize": 224,
     "columns": 4,
     "pairs": 16,
+    "flowSmoothingSigma": 2.0,
     "sourceSha256": "fdf3ee490f522aed654c56ce9945b28ace0f752bce480cdbaed26df77704e063",
-    "atlasSha256": "fedff37bfb513b1228c70c10a542b87ced16cf88935b5d4c3cac37b78093ff0f"
+    "atlasSha256": "2a07ef79502ee2bd59bf897d476ab560ab0a0ad8e8ed157ddacbd2d64ec192d9"
   },
   "rest": {
     "range": 16,
     "gridSize": 224,
     "columns": 4,
     "pairs": 16,
+    "flowSmoothingSigma": 2.0,
     "sourceSha256": "283e52300684a379946c64c22a850072dc2322c3fae0b0720efef4d08d1e133a",
-    "atlasSha256": "31c0dd3d98e3fbe61f5736f5d8d00faa4de53597c73ed169aa314896edec6229"
+    "atlasSha256": "94caaa893aefefb500dc18a83fc42c64c5db2d8355e283bab65a5d68befef252"
   },
   "look": {
     "range": 16,
     "gridSize": 224,
     "columns": 4,
     "pairs": 16,
+    "flowSmoothingSigma": 2.0,
     "sourceSha256": "b33e7d03e29d7a69c7618bda9c2f2ba6fb1d4df61f7f3174130aa81ca17520d2",
-    "atlasSha256": "99063825ab311c90d9f11ed6354a53b49c068967e8054f31e71d88407aeb7ff8"
+    "atlasSha256": "410149dce9cba90ff4100d17892956f0527ba4974b733e9cb3c161c9ba34146f"
   },
   "stretch": {
     "range": 32,
     "gridSize": 224,
     "columns": 4,
     "pairs": 16,
+    "flowSmoothingSigma": 2.0,
     "sourceSha256": "b93eb21501ed0da7f8c0e2f146cdbb8d45ac4bfac411c21542c9cec4a0c1a5e5",
-    "atlasSha256": "ce52fae9f3525347062dd167c26c1ff35accc44201484ed9d53b48b7becfd95f"
+    "atlasSha256": "ba74dd7a0aecd1c612e79dc9e5f5d535518483372f343b50aff905bd304dff3f"
   },
   "companion": {
     "range": 24,
     "gridSize": 224,
     "columns": 4,
     "pairs": 16,
+    "flowSmoothingSigma": 2.0,
     "sourceSha256": "858676f28f881aa82b9724d301105a1ee1b6df2f58be1d081d910ab9f37e8429",
-    "atlasSha256": "508e3349cac28d3a31f5a37b7389d000d1a77771e562138f248cc2a21024e3c6"
+    "atlasSha256": "8c439f034e696ff8e4790d3583b333f3ebae0a31d066bf6487f0011ce08c7947"
   },
   "blink": {
     "range": 8,
     "gridSize": 224,
     "columns": 4,
     "pairs": 16,
+    "flowSmoothingSigma": 2.0,
     "sourceSha256": "a4ebe3a3099df7a46ae43e6e0b653a94fecd56cc05c4862836bafd87de6e0942",
-    "atlasSha256": "f4bbddd4f5ff681d2b5564b94d9386de265f5d2e07d7c00f6434477354fec345"
+    "atlasSha256": "286cb7c9e94a17596e132e93f092b8b3760d206c90845e725ecf90d6fea375a6"
   }
 }
