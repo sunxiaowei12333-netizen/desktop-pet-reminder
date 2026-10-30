@@ -91,7 +91,7 @@ function harness() {
 
 test("native card is separate from the transparent unthrottled cat and both preserve isolation", () => {
   const h = harness(); h.api.createPetWindow(); const { pet, card } = h.pair();
-  assert.equal(pet.options.width, 198); assert.equal(pet.options.height, 216);
+  assert.equal(pet.options.width, 183); assert.equal(pet.options.height, 199);
   assert.equal(card.options.width, 234); assert.equal(card.options.height, 135);
   assert.equal(pet.options.vibrancy, undefined);
   assert.equal(card.options.vibrancy, undefined); assert.equal(card.options.roundedCorners, false);
@@ -113,7 +113,7 @@ test("a reminder before readiness is delivered to both and shown only once both 
   h.ready(card); assert.equal(card.messages.at(-1).data.body, reminder.body); assert.equal(card.visible, false);
   h.ready(pet); assert.equal(pet.messages.at(-1).data.body, reminder.body);
   assert.equal(pet.visible, true); assert.equal(card.visible, true);
-  assert.equal(pet.bounds.x - card.bounds.x - card.bounds.width, 7);
+  assert.equal(pet.bounds.x - card.bounds.x - card.bounds.width, 13);
   assert.ok(Math.abs(card.bounds.y + card.bounds.height / 2 - pet.bounds.y - pet.bounds.height / 2) <= .5);
   h.flushMoves();
 });
@@ -130,8 +130,8 @@ test("dismissal before readiness or during reload cannot resurrect either window
 
 test("dragging either surface moves the pair and clamps its combined bounds", () => {
   const h = harness(); h.api.showPet({ body: "move" }); const { pet, card } = h.pair(); h.ready(pet); h.ready(card);
-  pet.drag(800, 200); h.flushMoves(); assert.equal(card.bounds.x, 559); assert.ok(Math.abs(card.bounds.y + card.bounds.height / 2 - pet.bounds.y - pet.bounds.height / 2) <= .5);
-  card.drag(200, 300); h.flushMoves(); assert.equal(pet.bounds.x, 441); assert.ok(Math.abs(card.bounds.y + card.bounds.height / 2 - pet.bounds.y - pet.bounds.height / 2) <= .5);
+  pet.drag(800, 200); h.flushMoves(); assert.equal(card.bounds.x, 553); assert.ok(Math.abs(card.bounds.y + card.bounds.height / 2 - pet.bounds.y - pet.bounds.height / 2) <= .5);
+  card.drag(200, 300); h.flushMoves(); assert.equal(pet.bounds.x, 447); assert.ok(Math.abs(card.bounds.y + card.bounds.height / 2 - pet.bounds.y - pet.bounds.height / 2) <= .5);
   pet.drag(-100, 9999); h.flushMoves(); const area = h.area();
   assert.equal(card.bounds.x, area.x); assert.equal(pet.bounds.y + pet.bounds.height, area.y + area.height);
   card.drag(9999, -100); h.flushMoves();

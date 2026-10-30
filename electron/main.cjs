@@ -20,9 +20,10 @@ const readyReminderWindows = new WeakSet();
 const expectedReminderBounds = new WeakMap();
 const REMINDER_SCALE = 0.9;
 const reminderPixels = value => Math.round(value * REMINDER_SCALE);
-const PET_SIZE = { width: reminderPixels(220), height: reminderPixels(240) };
+const PET_SCALE = 0.83;
+const PET_SIZE = { width: Math.round(220 * PET_SCALE), height: Math.round(240 * PET_SCALE) };
 const REMINDER_WIDTH = reminderPixels(260);
-const REMINDER_GAP = reminderPixels(8);
+const REMINDER_GAP = reminderPixels(14);
 let lastReminder = null;
 let reminderRuntime = null;
 let generationBootstrapState = {
