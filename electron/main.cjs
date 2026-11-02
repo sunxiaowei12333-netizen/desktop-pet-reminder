@@ -5,6 +5,8 @@ const path = require("path");
 const { pathToFileURL } = require("url");
 
 const { createReminderRuntime, intervalMinutes } = require("./reminder-runtime.cjs");
+const { createLoginItemController } = require("./login-item.cjs");
+const loginItem = createLoginItemController(app);
 
 const isDev = !app.isPackaged;
 const devServerUrl = process.env.VITE_DEV_SERVER_URL || "http://127.0.0.1:4173";
@@ -778,6 +780,8 @@ app.on("activate", () => {
 });
 
 ipcMain.handle("settings:get", () => readSettings());
+ipcMain.handle("login-item:get", () => loginItem.get());
+ipcMain.handle("login-item:set", (_event, enabled) => loginItem.set(enabled));
 ipcMain.handle("settings:save", (_event, settings) => writeSettings(settings));
 ipcMain.handle("assets:get", () => readPetAssets());
 ipcMain.handle("assets:save", (_event, assets) => writePetAssets(assets));

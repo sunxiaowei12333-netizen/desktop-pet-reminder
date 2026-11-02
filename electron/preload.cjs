@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld("petDesktop", {
     return () => ipcRenderer.removeListener("reminder:status", listener);
   },
   getSettings: () => ipcRenderer.invoke("settings:get"),
+  getLaunchAtLogin: () => ipcRenderer.invoke("login-item:get"),
+  setLaunchAtLogin: (enabled) => ipcRenderer.invoke("login-item:set", enabled),
   saveSettings: (settings) => ipcRenderer.invoke("settings:save", settings),
   getPetAssets: () => ipcRenderer.invoke("assets:get"),
   savePetAssets: (assets) => ipcRenderer.invoke("assets:save", assets),

@@ -31,6 +31,7 @@ import nailaoBlinkSequence from "./assets/nailao/sequences/sequence-blink.webp";
 import "./styles.css";
 import PetOverlay from "./PetOverlay.jsx";
 import SmoothPet from "./SmoothPet.jsx";
+import LaunchAtLogin from "./LaunchAtLogin.jsx";
 import useReminderSchedule, { formatReminderTime } from "./useReminderSchedule.js";
 
 const initialSettings = {
@@ -604,6 +605,7 @@ function App() {
                     </button>
                   </div>
                 </section>
+                <LaunchAtLogin desktopApi={desktopApi} />
               </div>
             )}
 
