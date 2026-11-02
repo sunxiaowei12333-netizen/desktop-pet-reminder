@@ -1,0 +1,309 @@
+{
+  "version": "0.1.15",
+  "method": "decode every lossless WebP frame; stationary pixels, alpha bounds, landmarks, full-action evidence and frame steps",
+  "actions": {
+    "wave": {
+      "sha256": "53e7063f2436e3d910002ad3663a2c1e19e196c2af2351efb36642237a2507b2",
+      "decodedFrames": 85,
+      "uniqueFrames": 43,
+      "durationMs": 4133,
+      "bounds": [
+        115,
+        45,
+        341,
+        409
+      ],
+      "greenPixels": 0,
+      "boundaryPixels": 0,
+      "staticPixelMaxError": 0,
+      "maxFrameMeanDelta": 0.5292490368544395,
+      "loopError": 0,
+      "groundedPawPixels": 1801,
+      "minimumGroundedPawPixels": 0
+    },
+    "rest": {
+      "sha256": "e408c2c6c257b7c2bdde02b7f5e0a95dbf4ffeb5134bab1a619c647b2ca0c749",
+      "decodedFrames": 43,
+      "uniqueFrames": 22,
+      "durationMs": 4067,
+      "bounds": [
+        41,
+        133,
+        406,
+        409
+      ],
+      "greenPixels": 0,
+      "boundaryPixels": 0,
+      "staticPixelMaxError": 0,
+      "maxFrameMeanDelta": 0.18074913559173852,
+      "loopError": 0,
+      "openEyeDarkPixels": 760,
+      "closedEyeDarkPixels": 116
+    },
+    "look": {
+      "sha256": "c928012f4dfa02d90cd4099a28edafa5c351d1e605dc5797e7d016ab19642128",
+      "decodedFrames": 85,
+      "uniqueFrames": 43,
+      "durationMs": 5067,
+      "bounds": [
+        67,
+        42,
+        337,
+        409
+      ],
+      "greenPixels": 0,
+      "boundaryPixels": 0,
+      "staticPixelMaxError": 0,
+      "maxFrameMeanDelta": 1.9957901064080572,
+      "loopError": 0,
+      "headLeftEdgeTravel": 46
+    },
+    "stretch": {
+      "sha256": "a1c1075cea5a27ec949d6b3b15911bfcc3427065ec66477e755c1931c060b4f5",
+      "decodedFrames": 85,
+      "uniqueFrames": 43,
+      "durationMs": 5067,
+      "bounds": [
+        105,
+        42,
+        375,
+        395
+      ],
+      "greenPixels": 0,
+      "boundaryPixels": 0,
+      "staticPixelMaxError": 0,
+      "maxFrameMeanDelta": 3.2636251115045543,
+      "loopError": 0,
+      "eyeDistanceMin": 41.92577622969121,
+      "eyeDistanceMax": 42.90121506723296,
+      "headScaleVariation": 0.023265850397087284,
+      "headVerticalTravel": 149.68013462200287,
+      "headRollRange": 2.9546917769031538
+    },
+    "companion": {
+      "sha256": "4b0956c4272f9ebf1d1ab333542c946da32aee0252df8c359cf0e422e850c145",
+      "decodedFrames": 73,
+      "uniqueFrames": 37,
+      "durationMs": 4733,
+      "bounds": [
+        89,
+        45,
+        356,
+        409
+      ],
+      "greenPixels": 0,
+      "boundaryPixels": 0,
+      "staticPixelMaxError": 0,
+      "maxFrameMeanDelta": 1.133616408803535,
+      "loopError": 0,
+      "eyeDistanceMin": 55.821558823249475,
+      "eyeDistanceMax": 56.31436634175999,
+      "headScaleVariation": 0.008828265080717657,
+      "headVerticalTravel": 8.98517465755242,
+      "headRollRange": 19.758263071222714
+    },
+    "blink": {
+      "sha256": "121c526db2846908a0433ea77741696b3a962497b64cace32d564b89d0e942db",
+      "decodedFrames": 29,
+      "uniqueFrames": 15,
+      "durationMs": 2700,
+      "bounds": [
+        80,
+        50,
+        366,
+        409
+      ],
+      "greenPixels": 0,
+      "boundaryPixels": 0,
+      "staticPixelMaxError": 0,
+      "maxFrameMeanDelta": 0.32423858866465255,
+      "loopError": 0,
+      "openEyeDarkPixels": 780,
+      "closedEyeDarkPixels": 140
+    }
+  },
+  "checks": [
+    {
+      "name": "wave: hash and lossless frame timeline",
+      "pass": true
+    },
+    {
+      "name": "wave: full canvas and safe transparent margins",
+      "pass": true
+    },
+    {
+      "name": "wave: no green contamination",
+      "pass": true
+    },
+    {
+      "name": "wave: exact loop",
+      "pass": true
+    },
+    {
+      "name": "wave: no abrupt whole-frame step",
+      "pass": true
+    },
+    {
+      "name": "wave: stationary region remains identical",
+      "pass": true
+    },
+    {
+      "name": "wave: paw starts on ground and fully lifts",
+      "pass": true
+    },
+    {
+      "name": "rest: hash and lossless frame timeline",
+      "pass": true
+    },
+    {
+      "name": "rest: full canvas and safe transparent margins",
+      "pass": true
+    },
+    {
+      "name": "rest: no green contamination",
+      "pass": true
+    },
+    {
+      "name": "rest: exact loop",
+      "pass": true
+    },
+    {
+      "name": "rest: no abrupt whole-frame step",
+      "pass": true
+    },
+    {
+      "name": "rest: stationary region remains identical",
+      "pass": true
+    },
+    {
+      "name": "rest: complete eyelid closure",
+      "pass": true
+    },
+    {
+      "name": "rest: body silhouette does not change size",
+      "pass": true
+    },
+    {
+      "name": "look: hash and lossless frame timeline",
+      "pass": true
+    },
+    {
+      "name": "look: full canvas and safe transparent margins",
+      "pass": true
+    },
+    {
+      "name": "look: no green contamination",
+      "pass": true
+    },
+    {
+      "name": "look: exact loop",
+      "pass": true
+    },
+    {
+      "name": "look: no abrupt whole-frame step",
+      "pass": true
+    },
+    {
+      "name": "look: stationary region remains identical",
+      "pass": true
+    },
+    {
+      "name": "look: full front-to-side turn",
+      "pass": true
+    },
+    {
+      "name": "stretch: hash and lossless frame timeline",
+      "pass": true
+    },
+    {
+      "name": "stretch: full canvas and safe transparent margins",
+      "pass": true
+    },
+    {
+      "name": "stretch: no green contamination",
+      "pass": true
+    },
+    {
+      "name": "stretch: exact loop",
+      "pass": true
+    },
+    {
+      "name": "stretch: no abrupt whole-frame step",
+      "pass": true
+    },
+    {
+      "name": "stretch: head landmark scale stays within 3%",
+      "pass": true
+    },
+    {
+      "name": "stretch: full standing-to-low-stretch motion",
+      "pass": true
+    },
+    {
+      "name": "companion: hash and lossless frame timeline",
+      "pass": true
+    },
+    {
+      "name": "companion: full canvas and safe transparent margins",
+      "pass": true
+    },
+    {
+      "name": "companion: no green contamination",
+      "pass": true
+    },
+    {
+      "name": "companion: exact loop",
+      "pass": true
+    },
+    {
+      "name": "companion: no abrupt whole-frame step",
+      "pass": true
+    },
+    {
+      "name": "companion: stationary region remains identical",
+      "pass": true
+    },
+    {
+      "name": "companion: head landmark scale stays within 3%",
+      "pass": true
+    },
+    {
+      "name": "companion: clear head tilt matching original amplitude",
+      "pass": true
+    },
+    {
+      "name": "blink: hash and lossless frame timeline",
+      "pass": true
+    },
+    {
+      "name": "blink: full canvas and safe transparent margins",
+      "pass": true
+    },
+    {
+      "name": "blink: no green contamination",
+      "pass": true
+    },
+    {
+      "name": "blink: exact loop",
+      "pass": true
+    },
+    {
+      "name": "blink: no abrupt whole-frame step",
+      "pass": true
+    },
+    {
+      "name": "blink: stationary region remains identical",
+      "pass": true
+    },
+    {
+      "name": "blink: complete eyelid closure",
+      "pass": true
+    },
+    {
+      "name": "blink: body silhouette does not change size",
+      "pass": true
+    }
+  ],
+  "pass": true,
+  "note": "Automated checks are necessary, not a substitute for visual review of complete cycles and occlusion."
+}

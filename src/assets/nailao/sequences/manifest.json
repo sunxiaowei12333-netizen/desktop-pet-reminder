@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "width": 448,
+  "height": 448,
+  "fps": 30,
+  "rendering": "lossless pre-rendered RGBA sequences; no runtime morphing",
+  "actions": {
+    "wave": {
+      "file": "sequence-wave.webp",
+      "sha256": "53e7063f2436e3d910002ad3663a2c1e19e196c2af2351efb36642237a2507b2",
+      "bytes": 2925526,
+      "sourceFrames": 124,
+      "encodedFrames": 85,
+      "durationMs": 4133,
+      "decodedMaxPixelError": 0,
+      "bounds": [
+        115,
+        45,
+        341,
+        409
+      ],
+      "greenPixels": 0,
+      "maxFrameMeanDelta": 0.529249036854325,
+      "areaEquivalentVariation": 0.023978011972949576,
+      "uniqueFrames": 43
+    },
+    "rest": {
+      "file": "sequence-rest.webp",
+      "sha256": "e408c2c6c257b7c2bdde02b7f5e0a95dbf4ffeb5134bab1a619c647b2ca0c749",
+      "bytes": 446278,
+      "sourceFrames": 122,
+      "encodedFrames": 43,
+      "durationMs": 4067,
+      "decodedMaxPixelError": 0,
+      "bounds": [
+        41,
+        133,
+        406,
+        409
+      ],
+      "greenPixels": 0,
+      "maxFrameMeanDelta": 0.1807491355917367,
+      "areaEquivalentVariation": 0.0,
+      "uniqueFrames": 22
+    },
+    "look": {
+      "file": "sequence-look.webp",
+      "sha256": "c928012f4dfa02d90cd4099a28edafa5c351d1e605dc5797e7d016ab19642128",
+      "bytes": 4543394,
+      "sourceFrames": 152,
+      "encodedFrames": 85,
+      "durationMs": 5067,
+      "decodedMaxPixelError": 0,
+      "bounds": [
+        67,
+        42,
+        337,
+        409
+      ],
+      "greenPixels": 0,
+      "maxFrameMeanDelta": 1.9957901064071462,
+      "areaEquivalentVariation": 0.04576342705912673,
+      "uniqueFrames": 43
+    },
+    "stretch": {
+      "file": "sequence-stretch.webp",
+      "sha256": "a1c1075cea5a27ec949d6b3b15911bfcc3427065ec66477e755c1931c060b4f5",
+      "bytes": 4398460,
+      "sourceFrames": 152,
+      "encodedFrames": 85,
+      "durationMs": 5067,
+      "decodedMaxPixelError": 0,
+      "bounds": [
+        105,
+        42,
+        375,
+        395
+      ],
+      "greenPixels": 0,
+      "maxFrameMeanDelta": 3.2636251115029347,
+      "areaEquivalentVariation": 0.047868705086119956,
+      "uniqueFrames": 43
+    },
+    "companion": {
+      "file": "sequence-companion.webp",
+      "sha256": "4b0956c4272f9ebf1d1ab333542c946da32aee0252df8c359cf0e422e850c145",
+      "bytes": 2644082,
+      "sourceFrames": 142,
+      "encodedFrames": 73,
+      "durationMs": 4733,
+      "decodedMaxPixelError": 0,
+      "bounds": [
+        89,
+        45,
+        356,
+        409
+      ],
+      "greenPixels": 0,
+      "maxFrameMeanDelta": 1.1336164088031047,
+      "areaEquivalentVariation": 0.016379032177270103,
+      "uniqueFrames": 37
+    },
+    "blink": {
+      "file": "sequence-blink.webp",
+      "sha256": "121c526db2846908a0433ea77741696b3a962497b64cace32d564b89d0e942db",
+      "bytes": 305742,
+      "sourceFrames": 81,
+      "encodedFrames": 29,
+      "durationMs": 2700,
+      "decodedMaxPixelError": 0,
+      "bounds": [
+        80,
+        50,
+        366,
+        409
+      ],
+      "greenPixels": 0,
+      "maxFrameMeanDelta": 0.32423858866463257,
+      "areaEquivalentVariation": 0.0,
+      "uniqueFrames": 15
+    }
+  }
+}

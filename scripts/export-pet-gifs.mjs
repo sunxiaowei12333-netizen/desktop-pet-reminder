@@ -8,6 +8,6 @@ const actions = [
   ["stretch", "04-伸懒腰"], ["companion", "05-安静陪伴"], ["blink", "06-眨眼提示"],
 ];
 for (const [id, label] of actions) {
-  copyFileSync(`src/assets/nailao/nailao-action-${id}-image2.gif`, path.join(output, `${label}.gif`));
+  copyFileSync(`src/assets/nailao/sequences/sequence-${id}.gif`, path.join(output, `${label}.gif`));
 }
 console.log(`Exported all six transparent GIFs to ${output}`);

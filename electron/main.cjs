@@ -445,12 +445,12 @@ async function generatePetAssetsWithLocalEngine(payload) {
 }
 
 const reminderActions = [
-  ["wave", "挥手提醒", "nailao-action-wave-image2.gif"],
-  ["rest", "趴下休息", "nailao-action-rest-image2.gif"],
-  ["look", "侧身看看", "nailao-action-look-image2.gif"],
-  ["stretch", "伸懒腰", "nailao-action-stretch-image2.gif"],
-  ["companion", "安静陪伴", "nailao-action-companion-image2.gif"],
-  ["blink", "眨眼提示", "nailao-action-blink-image2.gif"],
+  ["wave", "挥手提醒", "sequences/sequence-wave.webp"],
+  ["rest", "趴下休息", "sequences/sequence-rest.webp"],
+  ["look", "侧身看看", "sequences/sequence-look.webp"],
+  ["stretch", "伸懒腰", "sequences/sequence-stretch.webp"],
+  ["companion", "安静陪伴", "sequences/sequence-companion.webp"],
+  ["blink", "眨眼提示", "sequences/sequence-blink.webp"],
 ];
 
 function getReminderRuntime() {

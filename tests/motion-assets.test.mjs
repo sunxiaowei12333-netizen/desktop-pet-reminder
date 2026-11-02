@@ -6,7 +6,7 @@ import sharp from 'sharp';
 const root='src/assets/nailao/';
 const metadata=JSON.parse(readFileSync(root+'rig/manifest.json'));
 for(const [id,spec] of Object.entries(metadata.actions)) {
-  test(`${id}: immutable rig texture and exported GIF match their manifest`, async()=>{
+  test(`${id}: legacy rig texture and legacy GIF match their archived manifest`, async()=>{
     const sha=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
     const texture=root+`rig/rig-${id}.png`;
     assert.equal(sha(texture),spec.textureSha256);

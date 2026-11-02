@@ -22,12 +22,12 @@ import nailaoLook from "./assets/nailao/nailao-action-look-1789211520308-1.png";
 import nailaoActionStretch from "./assets/nailao/nailao-action-stretch-1789211510158-1.png";
 import nailaoCompanion from "./assets/nailao/nailao-action-companion-1789211624763-1.png";
 import nailaoBlink from "./assets/nailao/nailao-action-blink-1789211461046-1.png";
-import nailaoWaveImage2Gif from "./assets/nailao/nailao-action-wave-image2.gif";
-import nailaoRestImage2Gif from "./assets/nailao/nailao-action-rest-image2.gif";
-import nailaoLookImage2Gif from "./assets/nailao/nailao-action-look-image2.gif";
-import nailaoStretchImage2Gif from "./assets/nailao/nailao-action-stretch-image2.gif";
-import nailaoCompanionImage2Gif from "./assets/nailao/nailao-action-companion-image2.gif";
-import nailaoBlinkImage2Gif from "./assets/nailao/nailao-action-blink-image2.gif";
+import nailaoWaveSequence from "./assets/nailao/sequences/sequence-wave.webp";
+import nailaoRestSequence from "./assets/nailao/sequences/sequence-rest.webp";
+import nailaoLookSequence from "./assets/nailao/sequences/sequence-look.webp";
+import nailaoStretchSequence from "./assets/nailao/sequences/sequence-stretch.webp";
+import nailaoCompanionSequence from "./assets/nailao/sequences/sequence-companion.webp";
+import nailaoBlinkSequence from "./assets/nailao/sequences/sequence-blink.webp";
 import "./styles.css";
 import PetOverlay from "./PetOverlay.jsx";
 import SmoothPet from "./SmoothPet.jsx";
@@ -169,7 +169,7 @@ const fixedNailaoViews = identityViewSpecs.map((item, index) => ({
 const fixedNailaoVariants = companionActions.map((item, index) => ({
   ...item,
   src: [nailaoWave, nailaoRest, nailaoLook, nailaoActionStretch, nailaoCompanion, nailaoBlink][index],
-  gif: [nailaoWaveImage2Gif, nailaoRestImage2Gif, nailaoLookImage2Gif, nailaoStretchImage2Gif, nailaoCompanionImage2Gif, nailaoBlinkImage2Gif][index],
+  gif: [nailaoWaveSequence, nailaoRestSequence, nailaoLookSequence, nailaoStretchSequence, nailaoCompanionSequence, nailaoBlinkSequence][index],
 }));
 const fixedNailaoPhoto = {
   id: "fixed-nailao-reference",

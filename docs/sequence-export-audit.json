@@ -1,0 +1,50 @@
+{
+  "wave": {
+    "gif": "01-举爪招呼.gif",
+    "gifSha256": "85597adee425b83def4585972687fb19f06b53d883cba41b714fb88055d25dfe",
+    "durationMs": 4130,
+    "frames": 85,
+    "paletteMeanErrorMax": 1.8804861941563888,
+    "alphaMatchesEveryFrame": true
+  },
+  "rest": {
+    "gif": "02-卧着眯眼.gif",
+    "gifSha256": "4cb79277bb811455c8469648386d4a4721314490131e84b9d5f0a37e5a9e7a0b",
+    "durationMs": 4070,
+    "frames": 43,
+    "paletteMeanErrorMax": 1.9518952078115768,
+    "alphaMatchesEveryFrame": true
+  },
+  "look": {
+    "gif": "03-转头看看.gif",
+    "gifSha256": "9d3bc7c84f4e1b3973d4661705a92a4746a85a3c845f6693f6176bce0f352df5",
+    "durationMs": 5070,
+    "frames": 85,
+    "paletteMeanErrorMax": 1.9947052275282962,
+    "alphaMatchesEveryFrame": true
+  },
+  "stretch": {
+    "gif": "04-伸展放松.gif",
+    "gifSha256": "5a3124e8512cfd10089f61d8a6d928cfa191495dd0f1ea475c8b769e704ea242",
+    "durationMs": 5070,
+    "frames": 85,
+    "paletteMeanErrorMax": 2.0092378565577427,
+    "alphaMatchesEveryFrame": true
+  },
+  "companion": {
+    "gif": "05-歪头陪伴.gif",
+    "gifSha256": "34ebcfc93c31254886a95b8a41581849c1b05f25b3f8ee40cf2b80860048023e",
+    "durationMs": 4730,
+    "frames": 73,
+    "paletteMeanErrorMax": 1.8844920794568771,
+    "alphaMatchesEveryFrame": true
+  },
+  "blink": {
+    "gif": "06-坐着眨眼.gif",
+    "gifSha256": "71b1fc4164b5922bf4f70d6f82ca1e3d75a8686688116fc4ef4699d45208ebcf",
+    "durationMs": 2700,
+    "frames": 29,
+    "paletteMeanErrorMax": 1.8506349359548857,
+    "alphaMatchesEveryFrame": true
+  }
+}
